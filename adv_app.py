@@ -1,4 +1,3 @@
-
 from fasthtml.common import *
 from hmac import compare_digest
 from pymongo import MongoClient
