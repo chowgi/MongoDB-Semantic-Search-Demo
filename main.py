@@ -9,23 +9,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Constants
-MONGO_URI = os.environ.get('MONGODB_URI')
+MONGO_URI = os.environ.get('MONGO_URI')
 if not MONGO_URI:
     raise ValueError("MONGODB_URI environment variable is not set")
+database = 'todo_db'
+collection = 'todos'
 
 # Database setup
-def setup_db():
+def setup_db(database):
     try:
         client = MongoClient(MONGO_URI)
-        db = client.todos_db
-        # Test connection
-        client.server_info()
-        return client, db
+        db = client.database_name
+        return db
     except Exception as e:
         print(f"Failed to initialize MongoDB connection: {e}")
         raise
 
-client, db = setup_db()
+db = setup_db(database_name)
 
 # Initialize FastHTML
 app = FastHTML(
@@ -33,11 +33,10 @@ app = FastHTML(
     debug=True
 )
 
-@app.route("/health")
+@app.route("/")
 def get():
     try:
-        client.server_info()
-        return Div("Database connection successful!", style="color: green")
+        return Div(f"{client.list_database_names()}", style="color: green")
     except Exception as e:
         return Div(f"Database connection failed: {str(e)}", style="color: red")
 
