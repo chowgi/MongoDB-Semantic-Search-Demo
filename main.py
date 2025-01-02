@@ -8,11 +8,21 @@ from bson import ObjectId
 # Load environment variables
 load_dotenv()
 
-# Connect to MongoDB
+# Connect to MongoDB and create database/collections if they don't exist
 client = MongoClient(os.environ['MONGODB_URI'])
 db = client.todos_db
-todos_collection = db.todos
-users_collection = db.users
+
+# Create collections if they don't exist
+collection_names = db.list_collection_names()
+if 'todos' not in collection_names:
+    todos_collection = db.create_collection('todos')
+else:
+    todos_collection = db.todos
+
+if 'users' not in collection_names:
+    users_collection = db.create_collection('users')
+else:
+    users_collection = db.users
 
 login_redir = RedirectResponse('/login', status_code=303)
 
