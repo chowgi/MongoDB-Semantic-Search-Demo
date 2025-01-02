@@ -17,6 +17,16 @@ collection = 'todos'
 
 # Database setup
 def setup_db(database, collection):
+    try:
+        client = MongoClient(MONGO_URI)
+        # Create/get database
+        db = client[database]
+        # Create/get collection
+        db[collection]
+        return db
+    except Exception as e:
+        print(f"Failed to setup database: {str(e)}")
+        return None
         
 
 
