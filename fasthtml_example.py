@@ -4,7 +4,6 @@
 ###
 
 # This fasthtml app includes functionality from fastcore, starlette, and fasthtml itself.
-# Run with: `python adv_app.py`
 # Importing from `fasthtml.common` brings the key parts of all of these together.
 from fasthtml.common import *
 from hmac import compare_digest
