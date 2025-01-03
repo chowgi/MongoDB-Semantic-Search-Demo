@@ -62,8 +62,8 @@ def get():
     return Titled("Login", frm)
 
 @rt("/login")
-def post(request):
-    form_data = dict(request.form)
+async def post(request):
+    form_data = dict(await request.form())
     if not form_data.get('name') or not form_data.get('pwd'): return login_redir
 
     # Find or create user in MongoDB
@@ -126,7 +126,7 @@ def delete(id:str):
     return clr_details()
 
 @rt("/edit/{id}")
-def get(id:str):
+async def get(id:str):
     todo = todos_collection.find_one({"_id": ObjectId(id)})
     res = Form(Group(Input(id="title", value=todo['title']), Button("Save")),
         Hidden(id="id", value=str(todo['_id'])), 
