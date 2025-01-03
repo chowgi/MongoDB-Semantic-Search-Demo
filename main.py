@@ -128,11 +128,15 @@ def delete(id:str):
 @rt("/edit/{id}")
 async def get(id:str):
     todo = todos_collection.find_one({"_id": ObjectId(id)})
-    res = Form(Group(Input(id="title", name="title", value=todo['title']), Button("Save")),
+    res = Form(
+        Group(Input(id="title", name="title", value=todo['title']), Button("Save")),
         Hidden(id="id", name="id", value=str(todo['_id'])), 
         CheckboxX(id="done", name="done", label='Done', checked=todo.get('done', False)),
         Textarea(id="details", name="details", rows=10, value=todo.get('details', '')),
-        hx_put="/", hx_target=f'todo-{id}', id="edit")
+        method="PUT",
+        hx_put="/",
+        hx_target=f'todo-{id}',
+        id="edit")
     return res
 
 @rt("/")
