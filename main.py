@@ -131,11 +131,12 @@ async def get(id:str):
     res = Form(
         Group(Input(id="title", name="title", value=todo['title']), Button("Save")),
         Hidden(id="id", name="id", value=str(todo['_id'])), 
-        CheckboxX(id="done", name="done", label='Done', checked=todo.get('done', False)),
+        CheckboxX(id="done", name="done", label='Done', checked=todo.get('done', False), value="on"),
         Textarea(id="details", name="details", rows=10, value=todo.get('details', '')),
         method="PUT",
         hx_put="/",
         hx_target=f'todo-{id}',
+        hx_swap="outerHTML",
         id="edit")
     return res
 
