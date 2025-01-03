@@ -90,7 +90,7 @@ def todo_to_ft(todo):
     """Convert a MongoDB todo document to FastHTML components"""
     show = AX(todo['title'], f'/todos/{str(todo["_id"])}', 'current-todo')
     edit = AX('edit', f'/edit/{str(todo["_id"])}', 'current-todo')
-    dt = '✅ ' if todo.get('done', False) else ''
+    dt = '✅ ' if todo.get('done') else ''
     cts = (dt, show, ' | ', edit, Hidden(id="id", value=str(todo["_id"])), Hidden(id="priority", value=todo.get("priority", 0)))
     return Li(*cts, id=f'todo-{str(todo["_id"])}')
 
