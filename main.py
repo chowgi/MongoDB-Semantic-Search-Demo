@@ -136,8 +136,8 @@ def get(id:str):
     return res
 
 @rt("/")
-def put(request):
-    form_data = dict(request.form)
+async def put(request):
+    form_data = dict(await request.form())
     todo_id = ObjectId(form_data['id'])
     update_data = {
         "title": form_data['title'],
