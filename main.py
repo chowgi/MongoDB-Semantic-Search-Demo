@@ -2,6 +2,7 @@
 from pymongo import MongoClient
 from bson import ObjectId
 import os
+from dotenv import load_dotenv
 
 # Load environment variables for MongoDB connection
 load_dotenv()
