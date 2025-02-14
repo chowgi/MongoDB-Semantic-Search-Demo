@@ -15,7 +15,7 @@ def setup_db():
     try:
         client = MongoClient(MONGO_URI)
         db = client['my_db_name']
-      print(f"Connctioned to MongoDB: {MONGO_URI}")
+        print(f"Connctioned to MongoDB: {MONGO_URI}")
         return db
     
     except Exception as e:
