@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Connect to MongoDB
-client = MongoClient(os.environ['MONGODB_URI'])
-db = client.amazon
+client = MongoClient(os.environ['WORK_CLUSTER'])
+db = client.retail
 collection = db.products
 
 # Read JSON file

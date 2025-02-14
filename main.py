@@ -1,14 +1,25 @@
 
 from pymongo import MongoClient
-from bson import ObjectId
+from fasthtml.common import *
 import os
-from dotenv import load_dotenv
 
-# Load environment variables for MongoDB connection
-load_dotenv()
+from pymongo.synchronous import collection
 
-# You can use any database you want - here we're using MongoDB which is great for document storage
-# MongoDB automatically creates databases and collections when they're first used
-client = MongoClient(os.environ['MONGO_URI'])
-db = client.amazon
-collection = products
+# MongoDB URI
+MONGO_URI = os.environ.get('MONGO_URI')
+if not MONGO_URI:
+    raise ValueError("MONGO_URI environment variable is not set")
+
+# Connect to MongoDB
+def setup_db():
+    try:
+        client = MongoClient(MONGO_URI)
+        db = client['my_db_name']
+      print(f"Connctioned to MongoDB: {MONGO_URI}")
+        return db
+    
+    except Exception as e:
+        print(f"Failed to initialize MongoDB connection: {e}")
+        raise
+
+setup_db()
