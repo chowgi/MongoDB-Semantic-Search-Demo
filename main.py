@@ -32,63 +32,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 #App routes
 @app.get("/")
 def home():
-    return Container(
-        # Header Section
-        Section(
-            H1("Welcome to FastHTML MongoDB", cls=TextT.center),
-            P("A powerful web application template with MongoDB integration", 
-              cls=(TextT.center, TextT.muted, TextT.lg)),
-            cls=SectionT.primary
-        ),
-        
-        # Features Grid
-        Grid(
-            Card(
-                CardHeader(H3("MongoDB Ready")),
-                CardBody(
-                    P("Pre-configured MongoDB integration with error handling and environment variable support"),
-                    Button("Learn More", cls=ButtonT.primary)
-                ),
-                cls=CardT.hover
-            ),
-            Card(
-                CardHeader(H3("MonsterUI Styling")),
-                CardBody(
-                    P("Beautiful components and themes powered by MonsterUI"),
-                    Button("Explore", cls=ButtonT.secondary)
-                ),
-                cls=CardT.hover
-            ),
-            Card(
-                CardHeader(H3("Fast Development")),
-                CardBody(
-                    P("Static file serving, debug mode, and more features to speed up your development"),
-                    Button("Get Started", cls=ButtonT.primary)
-                ),
-                cls=CardT.hover
-            ),
-            cols=3
-        ),
-        
-        # Stats Section
-        Section(
-            Grid(
-                Card(H3("Easy Setup"), P("Configure in minutes"), cls=CardT.primary),
-                Card(H3("Production Ready"), P("Deploy with confidence"), cls=CardT.secondary),
-                Card(H3("Extensible"), P("Build anything"), cls=CardT.hover),
-                cols=3
-            ),
-            cls=SectionT.muted
-        ),
-        
-        # Footer
-        Footer(
-            DivCentered(
-                P(f"© {datetime.now().year} FastHTML MongoDB Template. Made with ❤️", 
-                  cls=TextT.center)
-            ),
-            cls="mt-8 py-4"
-        )
-    )
-
+    return Titled("Your First App",
+      Card(
+          H1("Welcome!"),
+          P("Your first MonsterUI app", cls=TextPresets.muted_sm),
+          P("I'm excited to see what you build with MonsterUI!"))
 serve()
