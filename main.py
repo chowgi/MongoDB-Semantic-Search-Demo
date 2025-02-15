@@ -1,9 +1,6 @@
-
-from pymongo import MongoClient
 from fasthtml.common import *
-import os
-
-from pymongo.synchronous import collection
+from monsterui.all import *
+from pymongo import MongoClient
 
 # MongoDB URI
 MONGO_URI = os.environ.get('MONGO_URI')
@@ -15,11 +12,24 @@ def setup_db():
     try:
         client = MongoClient(MONGO_URI)
         db = client['my_db_name']
-        print(f"Connctioned to MongoDB: {MONGO_URI}")
+        print(f"Connectioned to MongoDB: {MONGO_URI}")
         return db
     
     except Exception as e:
         print(f"Failed to initialize MongoDB connection: {e}")
         raise
 
-setup_db()
+db = setup_db()
+
+# Initialize FastHTML
+app = FastHTML(hdrs=Theme.blue.headers(),debug=True)
+
+# Allow static files to be served
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+#App routes
+@app.get("/")
+def home():
+    return "<h1>Hello, World</h1>"
+
+serve()
