@@ -36,5 +36,6 @@ def home():
       Card(
           H1("Welcome!"),
           P("Your first MonsterUI app", cls=TextPresets.muted_sm),
-          P("I'm excited to see what you build with MonsterUI!"))
+          P("I'm excited to see what you build with MonsterUI!")))
+
 serve()
