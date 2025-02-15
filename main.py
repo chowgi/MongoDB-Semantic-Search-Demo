@@ -24,10 +24,7 @@ def setup_db():
 db = setup_db()
 
 # Initialize FastHTML with MonsterUI theme
-app = FastHTML(hdrs=Theme.blue.headers(daisy=True), debug=True)
-
-# Allow static files to be served
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app = fast_app(hdrs=Theme.blue.headers(daisy=True), debug=True)
 
 #App routes
 @app.get("/")
