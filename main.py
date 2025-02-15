@@ -24,7 +24,7 @@ def setup_db():
 db = setup_db()
 
 # Initialize FastHTML with MonsterUI theme
-app, rt = fast_app(hdrs=Theme.blue.headers(daisy=True), debug=True)
+app, rt = fast_app(hdrs=Theme.blue.headers(daisy=True), static_path="static", debug=True)
 
 #App routes
 @rt("/")
@@ -34,5 +34,6 @@ def home():
           H1("Welcome!"),
           P("Your first MonsterUI app", cls=TextPresets.muted_sm),
           P("I'm excited to see what you build with MonsterUI!")))
+          
 
 serve()
