@@ -1,6 +1,6 @@
 matplotlib
 ipython
-llama-index
+llama-index==0.9.11
 llama-index-embeddings-voyageai
 llama-index-vector-stores-mongodb
 llama-index-llms-openai
