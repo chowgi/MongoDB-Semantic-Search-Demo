@@ -10,4 +10,3 @@ llama-index-postprocessor-voyageai-rerank
 trafilatura
 pymongo
 python-fasthtml
-gpt-index
