@@ -13,13 +13,16 @@ from monsterui.all import *
 import pymongo
 import os
 
+# Initialize FastHTML with MonsterUI theme
+hdrs = Theme.green.headers()
+app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True)
 
 # Retrieve environment variables for necessary API keys and URIs
 openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
-db_name = "hawthornfc"
+db_name = "bendigo"
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
@@ -44,8 +47,8 @@ storage_context = StorageContext.from_defaults(vector_store=store)
 # Generate the vector index from the existing vector store
 index = VectorStoreIndex.from_vector_store(store)
 
-# create context
-ctx = Context(agent)
+# create the chat engine
+chat_engine = index.as_query_engine(similarity_top_k=3)
 
 # Delete a database
 def delete_db(db_name: str):
@@ -163,74 +166,74 @@ def check_and_scrape_collection(mongodb_client, db_name, website_url, storage_co
     else:
         print(f"Collection '{collection_name}' already contains {document_count} documents. Skipping scraping process.")
 
-# query="what club is this?" 
-# query_engine = index.as_query_engine(similarity_top_k=3)
-# response = query_engine.query(query)
-# print(response)
-#display_response(response)
-
-chat_engine = index.as_chat_engine(chat_mode="best", llm=llm, verbose=True)
-
 ##################################################
 ################  Front End Code #################
 ##################################################
 
-# Initialize FastHTML with MonsterUI theme
-hdrs = Theme.green.headers()
-app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True)
-
 @rt("/")
-def get():
-    return Titled("MongoDB RAG Demos",
+async def get():
+    return Titled("AI Chat Assistant",
         Container(
             Card(
-                Div(id="chat-messages", cls="space-y-4 h-[60vh] overflow-y-auto p-4"),
+                Div(id="chat-messages", 
+                    cls="space-y-4 h-[60vh] overflow-y-auto p-4",
+                    style="height:300px; overflow: auto"
+                   ),
                 Form(
-                    Div(
-                        TextArea(id="message", placeholder="Type your message..."),
-                        Button("Send", cls=ButtonT.primary),
-                        cls="space-y-2"
+                    TextArea(id="message", placeholder="Type your message..."),
+                    Button(
+                        "Send",
+                        cls=ButtonT.primary,
+                        hx_post="/send-message",
+                        hx_target="#chat-messages",
+                        hx_swap="beforeend scroll:#chat-messages:bottom"
                     ),
+                    cls="space-y-2",
                     hx_trigger="keydown[key=='Enter' && !shiftKey]",
-                    hx_post="/send-message", #Updated hx_post to send-message
+                    hx_post="/send-message",
                     hx_target="#chat-messages",
-                    hx_swap="beforeend"
+                    hx_swap="beforeend scroll:#chat-messages:bottom"
                 )
             )
         )
     )
 
-def create_message_div(role, content):
+async def create_message_div(role, content):
     return Div(
-        Card(
-            P(content, cls="space-y-2"),
-            cls=CardT.primary if role == "assistant" else CardT.secondary
-        ),
-        cls=f"flex {('justify-start' if role == 'assistant' else 'justify-end')}"
-    )
+        Div(role, cls="chat-header"),
+        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 @rt("/send-message")
-def post(message: str):
-    # Immediately return the user message and trigger AI response
+async def post_send(message: str):
+    user_message = create_message_div("user", message)
+    loading_div = Div(Loading(), id="loading")
     return (
-        create_message_div("user", message),
-        TextArea(id="message", placeholder="Type your message...", 
-                cls="w-full p-2 border rounded-lg",
-                hx_swap_oob="true"),
+        user_message,
+        TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
+        loading_div,
         Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
-            hx_target="#chat-messages", hx_swap="beforeend")
-    ),Div(Loading(), id="loading")
+            hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
+    )
 
 @rt("/get-response")
-def post(message: str):
+async def post_response(message: str):
 
-    # Get response from OpenAI
-    ai_response = chat_engine.chat(message)
+    ai_response = await chat_engine.query(message)
 
-    # Return both the AI response and a cleared loading div
+    response_div = create_message_div("assistant", ai_response)
     return (
-        create_message_div("assistant", ai_response),
-        Div(id="loading", hx_swap_oob="true")  # Empty div to clear loading
-    )
+        response_div,
+        Div(id="loading", hx_swap_oob="true"))
+
+async def on_connect(send):
+    await send(Div("Connected to chat!", cls="chat-message"))
+
+async def on_disconnect(ws):
+    print("Client disconnected")
+
+@app.ws('/wscon', conn=on_connect, disconn=on_disconnect)
+async def wscon(msg: str, send):
+    await send(Div(f"Message received: {msg}", cls="chat-message"))
 
 serve()

@@ -1,2 +1,1 @@
-
-gpt-index==99999
+gpt-index
