@@ -5,7 +5,6 @@ from llama_index.llms.openai import OpenAI
 from llama_index.core import Document
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.core.workflow import Context
-from llama_index.core.agent.workflow import AgentWorkflow
 from llama_index.llms.openai import OpenAI
 from trafilatura import fetch_url, extract
 from trafilatura.sitemaps import sitemap_search
