@@ -175,6 +175,36 @@ async def get():
     return Titled("AI Chat Assistant",
         Container(
             Card(
+                Style("""
+                    .chat {
+                      display: flex;
+                      flex-direction: column;
+                      margin-bottom: 1rem;
+                    }
+                    .chat-header {
+                      font-weight: bold;
+                      margin-bottom: 0.25rem;
+                    }
+                    .chat-start {
+                      align-items: flex-start;
+                    }
+                    .chat-end {
+                      align-items: flex-end;
+                    }
+                    .chat-bubble {
+                      padding: 0.75rem 1rem;
+                      border-radius: 0.5rem;
+                      max-width: 80%;
+                    }
+                    .chat-bubble-primary {
+                      background-color: #3b82f6;
+                      color: white;
+                    }
+                    .chat-bubble-secondary {
+                      background-color: #e5e7eb;
+                      color: #1f2937;
+                    }
+                """),
                 Div(id="chat-messages", 
                     cls="space-y-4 h-[60vh] overflow-y-auto p-4",
                     style="height:300px; overflow: auto"
@@ -206,11 +236,11 @@ async def create_message_div(role, content):
 
 @rt("/send-message")
 async def post_send(message: str):
-    user_message = create_message_div("user", message)
+    user_message = await create_message_div("user", message)
     loading_div = Div(Loading(), id="loading")
     return (
         user_message,
-        TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
+        TextArea(id="message", placeholder="Type your message...", value="", hx_swap_oob="true"),
         loading_div,
         Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
@@ -218,13 +248,20 @@ async def post_send(message: str):
 
 @rt("/get-response")
 async def post_response(message: str):
-
-    ai_response = await chat_engine.query(message)
-
-    response_div = create_message_div("assistant", ai_response)
-    return (
-        response_div,
-        Div(id="loading", hx_swap_oob="true"))
+    try:
+        ai_response = await chat_engine.query(message)
+        response_div = await create_message_div("assistant", ai_response.response)
+        return (
+            response_div,
+            Div(id="loading", hx_swap_oob="true")
+        )
+    except Exception as e:
+        print(f"Error generating response: {str(e)}")
+        error_div = await create_message_div("assistant", f"Sorry, I encountered an error: {str(e)}")
+        return (
+            error_div,
+            Div(id="loading", hx_swap_oob="true")
+        )
 
 async def on_connect(send):
     await send(Div("Connected to chat!", cls="chat-message"))
