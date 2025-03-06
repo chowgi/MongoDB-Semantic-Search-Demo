@@ -320,95 +320,10 @@ def hybrid_search(query: str):
         print(f"Hybrid search error for query '{query}': {str(e)}")
         return []
 
-def search_products(query: str):
-    """Search products using Atlas Search with fuzzy matching"""
-    pipeline = [{
-        "$search": {
-            "index": "product_search",
-            "compound": {
-                "should": [{
-                    "autocomplete": {
-                        "query": query,
-                        "path": "title",
-                        "fuzzy": {
-                            "maxEdits": 1,
-                            "prefixLength": 0
-                        },
-                        "score": {
-                            "boost": {
-                                "value": 3
-                            }
-                        },
-                        "tokenOrder": "sequential"
-                    }
-                }, {
-                    "autocomplete": {
-                        "query": query,
-                        "path": "description",
-                        "fuzzy": {
-                            "maxEdits": 1,
-                            "prefixLength": 0
-                        },
-                        "score": {
-                            "boost": {
-                                "value": 1
-                            }
-                        },
-                        "tokenOrder": "sequential"
-                    }
-                }]
-            },
-            "scoreDetails": True
-        }
-    }, {
-        "$limit": 50
-    }, {
-        "$project": {
-            "title": 1,
-            "_id": 1,
-            "score": {
-                "$meta": "searchScore"
-            }
-        }
-    }, {
-        "$sort": {
-            "score": -1
-        }
-    }]
-    try:
-        results = list(db.products.aggregate(pipeline))
-        #print(f"Search results for '{query}': {results}")
-        return results
-    except Exception as e:
-        print(f"Atlas Search error for query '{query}': {str(e)}")
-        return []
 
 
-@rt("/search/autocomplete")
-def get(search: str = ""):
-    """Handle autocomplete requests"""
-    if not search or len(search) < 2:
-        return ""
 
-    # For autocomplete we'll just use the text search as it's fastest
-    results = text_search(search)
-    header = [
-        Div(A(f"Search results for: {search}",
-              href=f"/search?q={search}",
-              cls=(TextT.warning, TextT.lg)),
-            cls="mb-2")
-    ] if search else []
 
-    content = [
-        Div(
-            A(result["text"][:80] +
-              ('...' if len(result["text"]) > 80 else ''),
-              href=f"/search?q={search}"),
-            Div(f"{result['score']:.3f}")) for result in results[:6]
-    ] if results else [
-        Div("No results found", style="padding: 4px 0;", cls="uk-paragraph")
-    ]
-    return Div(*(header + content), id="search-results")
 
 
 ##################################################
