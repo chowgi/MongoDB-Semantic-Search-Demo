@@ -201,6 +201,125 @@ def search_bar():
 
     return Div(H2("Symantec Search Demo", cls="pb-10"), search_form, search_container, cls='pt-5')
 
+def text_search(query: str):
+    """Search using MongoDB Atlas Text Search with text index"""
+    pipeline = [
+        {
+            "$search": {
+                "index": "text_index",
+                "text": {
+                    "query": query,
+                    "path": "text"
+                },
+                "highlight": {
+                    "path": "text"
+                }
+            }
+        },
+        {
+            "$limit": 5
+        },
+        {
+            "$project": {
+                "text": 1,
+                "url": 1,
+                "score": { "$meta": "searchScore" },
+                "highlights": { "$meta": "searchHighlights" }
+            }
+        }
+    ]
+    try:
+        collection = mongodb_client[db_name]['embeddings']
+        results = list(collection.aggregate(pipeline))
+        return results
+    except Exception as e:
+        print(f"Text search error for query '{query}': {str(e)}")
+        return []
+
+def vector_search(query: str):
+    """Search using MongoDB Atlas Vector Search with vector index"""
+    # First, generate embedding for the query
+    query_embedding = Settings.embed_model.get_text_embedding(query)
+    
+    # Perform vector search
+    pipeline = [
+        {
+            "$search": {
+                "index": "vector_index",
+                "knnBeta": {
+                    "vector": query_embedding,
+                    "path": "embedding",
+                    "k": 5,
+                    "similarity": "cosine"
+                }
+            }
+        },
+        {
+            "$project": {
+                "text": 1,
+                "url": 1,
+                "score": { "$meta": "searchScore" }
+            }
+        }
+    ]
+    try:
+        collection = mongodb_client[db_name]['embeddings']
+        results = list(collection.aggregate(pipeline))
+        return results
+    except Exception as e:
+        print(f"Vector search error for query '{query}': {str(e)}")
+        return []
+
+def hybrid_search(query: str):
+    """Hybrid search using both text and vector search capabilities"""
+    # First, generate embedding for the query
+    query_embedding = Settings.embed_model.get_text_embedding(query)
+    
+    # Perform hybrid search
+    pipeline = [
+        {
+            "$search": {
+                "index": "vector_index", # We'll use the vector index but with compound operators
+                "compound": {
+                    "should": [
+                        {
+                            "text": {
+                                "query": query,
+                                "path": "text",
+                                "score": { "boost": { "value": 1.5 } }
+                            }
+                        },
+                        {
+                            "knnBeta": {
+                                "vector": query_embedding,
+                                "path": "embedding",
+                                "k": 10,
+                                "similarity": "cosine"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "$limit": 5
+        },
+        {
+            "$project": {
+                "text": 1,
+                "url": 1,
+                "score": { "$meta": "searchScore" }
+            }
+        }
+    ]
+    try:
+        collection = mongodb_client[db_name]['embeddings']
+        results = list(collection.aggregate(pipeline))
+        return results
+    except Exception as e:
+        print(f"Hybrid search error for query '{query}': {str(e)}")
+        return []
+
 def search_products(query: str):
     """Search products using Atlas Search with fuzzy matching"""
     pipeline = [{
@@ -271,20 +390,21 @@ def get(search: str = ""):
     if not search or len(search) < 2:
         return ""
 
-    results = search_products(search)
+    # For autocomplete we'll just use the text search as it's fastest
+    results = text_search(search)
     header = [
         Div(A(f"Search results for: {search}",
-              href=f"/search/{search}",
+              href=f"/search?q={search}",
               cls=(TextT.warning, TextT.lg)),
             cls="mb-2")
     ] if search else []
 
     content = [
         Div(
-            A(product["title"][:80] +
-              ('...' if len(product["title"]) > 80 else ''),
-              href=f"/products/{product['_id']}"),
-            Div(f"{product['score']:.3f}")) for product in results[:6]
+            A(result["text"][:80] +
+              ('...' if len(result["text"]) > 80 else ''),
+              href=f"/search?q={search}"),
+            Div(f"{result['score']:.3f}")) for result in results[:6]
     ] if results else [
         Div("No results found", style="padding: 4px 0;", cls="uk-paragraph")
     ]
@@ -358,10 +478,54 @@ def get():
     )
 
 @rt("/search")
-def get():
+def get(q: str = None):
+    search_results = Div(id="search-results", cls="m-2")
+    
+    if q and len(q) >= 2:
+        # Perform all three types of searches
+        text_results = text_search(q)
+        vector_results = vector_search(q)
+        hybrid_results = hybrid_search(q)
+        
+        # Create the comparison display
+        search_results = Grid(
+            Card(
+                H2("Text Search", cls=TextT.primary),
+                P("Traditional keyword-based search using MongoDB text index."),
+                Ul(*[Li(
+                    Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
+                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
+                ) for result in text_results]),
+                cls=CardT.primary
+            ),
+            Card(
+                H2("Vector Search", cls=TextT.primary),
+                P("Semantic search based on embeddings vector similarity."),
+                Ul(*[Li(
+                    Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
+                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
+                ) for result in vector_results]),
+                cls=CardT.primary
+            ),
+            Card(
+                H2("Hybrid Search", cls=TextT.primary),
+                P("Combined approach using both text and vector search."),
+                Ul(*[Li(
+                    Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
+                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
+                ) for result in hybrid_results]),
+                cls=CardT.primary
+            ),
+            cols_lg=3,
+            cls="gap-4 mt-4"
+        )
+    
     return Container(
         navbar(),
-        search_bar(),
+        Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
+            P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
+            search_bar()),
+        search_results,
         cls=ContainerT.sm
     )
 
