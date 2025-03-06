@@ -186,12 +186,24 @@ def search_bar():
                          hx_trigger="keyup changed delay:50ms, search",
                          hx_target="#search-results",
                          cls="search-bar")
+    search_button = Button("Search", 
+                          cls=ButtonT.primary,
+                          hx_get="/search/autocomplete",
+                          hx_target="#search-results",
+                          hx_include="closest div")
     search_container = Container(
         id="search-results",
         cls="m-2",
         style="position: absolute; background-color:black")
 
-    return Div(search_input, search_container, cls='pt-10')
+    # Using a Grid to place search input and button side by side
+    search_form = Grid(
+        Div(search_input, cls="col-span-3"),
+        Div(search_button, cls="col-span-1"),
+        cols=4,
+        cls="items-center gap-2")
+
+    return Div(search_form, search_container, cls='pt-10')
 
 def search_products(query: str):
     """Search products using Atlas Search with fuzzy matching"""
