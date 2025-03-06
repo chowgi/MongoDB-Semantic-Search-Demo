@@ -191,19 +191,15 @@ def search_bar():
                           hx_get="/search/autocomplete",
                           hx_target="#search-results",
                           hx_include="closest div")
-    search_container = Container(
-        id="search-results",
-        cls="m-2",
-        style="position: absolute; background-color:black")
 
     # Using a Grid to place search input and button side by side
     search_form = Grid(
-        Div(search_input, cls="col-span-3"),
+        Div(search_input, cls="col-span-5"),
         Div(search_button, cls="col-span-1"),
-        cols=4,
+        cols=6,
         cls="items-center gap-2")
 
-    return Div(search_form, search_container, cls='pt-10')
+    return Div(H2("Symantec Search Demo", cls="pb-10"), search_form, search_container, cls='pt-5')
 
 def search_products(query: str):
     """Search products using Atlas Search with fuzzy matching"""
@@ -345,7 +341,7 @@ def use_case_cards():
         ) for p in products
     ]
 
-    return Grid(*product_cards, cols_lg=3,cls='pt-10 gap-4')
+    return Grid(*product_cards, cols_lg=3,cls='pt-20 gap-4')
 
 ##################################################
 ###################  Routes ######################
@@ -429,5 +425,6 @@ def post(message: str):
     return (
         create_message_div("assistant", ai_response),
         Div(id="loading", hx_swap_oob="true"))
+
 
 serve()
