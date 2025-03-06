@@ -11,17 +11,19 @@ def search_bar():
                          cls="search-bar")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
-                          type="button")
+                          type="submit")
 
-    search_form = Grid(
-        Div(search_input, cls="col-span-5"),
-        Div(search_button, cls="col-span-1"),
-        cols=6,
+    search_form = Form(
+        Grid(
+            Div(search_input, cls="col-span-5"),
+            Div(search_button, cls="col-span-1"),
+            cols=6,
+            cls="items-center gap-2"
+        ),
         hx_get="/search/results",
         hx_target="#search-results",
-        hx_include="closest form",
-        hx_trigger="submit, click from:.primary, keyup[key=='Enter'] from:input[name='q']",
-        cls="items-center gap-2")
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='q']"
+    )
 
     return Div(search_form, cls='pt-5')
 
