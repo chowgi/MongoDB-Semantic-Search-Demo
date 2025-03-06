@@ -387,7 +387,9 @@ def get():
     )
 
 @rt("/search")
-def get(q: str = None):
+def get(q: str = None, request=None):
+    # Check if this is an HTMX request
+    is_htmx = request and request.headers.get('hx-request') == 'true'
     search_results = Div(id="search-results", cls="m-2")
 
     if q and len(q) >= 2:
@@ -427,7 +429,12 @@ def get(q: str = None):
             cols_lg=3,
             cls="gap-4 mt-4"
         )
-
+    
+    # If this is an HTMX request, just return the search results
+    if is_htmx:
+        return search_results
+    
+    # Otherwise return the full page
     return Container(
         navbar(),
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
