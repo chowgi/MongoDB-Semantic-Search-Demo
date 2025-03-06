@@ -182,15 +182,13 @@ def search_bar():
     search_input = Input(type="search",
                          name="q",
                          placeholder="Search documents...",
-                         hx_trigger="keyup changed delay:500ms",
                          hx_get="/search",
                          hx_target="#search-results",
                          cls="search-bar")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
                           hx_get="/search",
-                          hx_target="#search-results",
-                          hx_include="closest div")
+                          hx_target="#search-results")
 
     # Using a Grid to place search input and button side by side
     search_form = Grid(
@@ -199,7 +197,7 @@ def search_bar():
         cols=6,
         cls="items-center gap-2")
 
-    return Div(search_form, Div(id="search-results", cls="m-2"), cls='pt-5')
+    return Div(search_form, cls='pt-5')
 
 def text_search(query: str):
     """Search using MongoDB Atlas Text Search with text index"""
@@ -404,8 +402,7 @@ def get(q: str = None):
                 Ul(*[Li(
                     Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
                     P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in text_results]),
-                cls=CardT.primary
+                ) for result in text_results])
             ),
             Card(
                 H2("Vector Search", cls=TextT.primary),
