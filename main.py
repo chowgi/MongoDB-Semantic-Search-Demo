@@ -199,7 +199,7 @@ def search_bar():
         cols=6,
         cls="items-center gap-2")
 
-    return Div(H2("Symantec Search Demo", cls="pb-10"), search_form, search_container, cls='pt-5')
+    return Div(search_form, cls='pt-5')
 
 def text_search(query: str):
     """Search using MongoDB Atlas Text Search with text index"""
@@ -319,12 +319,6 @@ def hybrid_search(query: str):
     except Exception as e:
         print(f"Hybrid search error for query '{query}': {str(e)}")
         return []
-
-
-
-
-
-
 
 ##################################################
 ################## RAG Logic #####################
