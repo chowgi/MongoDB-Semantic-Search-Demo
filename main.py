@@ -126,12 +126,23 @@ def get():
     )
 
 @rt("/search")
-def get(q: str = None, request=None):
-    # Check if this is an HTMX request - note the case sensitivity
-    is_htmx = request and request.headers.get('HX-Request') == 'true'
+def get():
+    """Main search page that displays the search form and empty results container"""
     search_results = Div(id="search-results", cls="m-2")
+    
+    return Container(
+        navbar(),
+        Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
+            P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
+            search_bar()),
+        search_results,
+        cls=ContainerT.sm
+    )
 
-    print(f"Search query: '{q}', HTMX request: {is_htmx}")
+@rt("/search/results")
+def get(q: str = None):
+    """Search results endpoint that returns just the results grid"""
+    search_results = Div(id="search-results", cls="m-2")
     
     if q and len(q) >= 2:
         # Perform all three types of searches
@@ -168,20 +179,8 @@ def get(q: str = None, request=None):
             cols_lg=3,
             cls="gap-4 mt-4"
         )
-
-    # If it's an HTMX request, just return the search results div
-    if is_htmx:
-        return search_results
-
-    # Otherwise, return the full page
-    return Container(
-        navbar(),
-        Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
-            P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
-            search_bar()),
-        search_results,
-        cls=ContainerT.sm
-    )
+    
+    return search_results
 
 @rt("/rag")
 def get():

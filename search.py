@@ -18,7 +18,7 @@ def search_bar():
         Div(search_input, cls="col-span-5"),
         Div(search_button, cls="col-span-1"),
         cols=6,
-        hx_get="/search",
+        hx_get="/search/results",
         hx_target="#search-results",
         hx_include="closest form",
         hx_trigger="submit, click from:.primary, keyup[key=='Enter'] from:input[name='q']",
