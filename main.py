@@ -178,146 +178,8 @@ def check_and_scrape_collection(mongodb_client, db_name, website_url, storage_co
 ################# Search Logic ###################
 ##################################################
 
-def search_bar():
-    search_input = Input(type="search",
-                         name="q",
-                         placeholder="Search documents...",
-                         hx_get="/search",
-                         hx_target="#search-results",
-                         cls="search-bar")
-    search_button = Button("Search", 
-                          cls=ButtonT.primary,
-                          hx_get="/search",
-                          hx_target="#search-results",
-                          hx_include="closest div")
-
-    # Using a Grid to place search input and button side by side
-    search_form = Grid(
-        Div(search_input, cls="col-span-5"),
-        Div(search_button, cls="col-span-1"),
-        cols=6,
-        cls="items-center gap-2")
-
-    return Div(search_form, Div(id="search-results", cls="m-2"), cls='pt-5')
-
-def text_search(query: str):
-    """Search using MongoDB Atlas Text Search with text index"""
-    pipeline = [
-        {
-            "$search": {
-                "index": "text_index",
-                "text": {
-                    "query": query,
-                    "path": "text"
-                },
-                "highlight": {
-                    "path": "text"
-                }
-            }
-        },
-        {
-            "$limit": 5
-        },
-        {
-            "$project": {
-                "text": 1,
-                "url": 1,
-                "score": { "$meta": "searchScore" },
-                "highlights": { "$meta": "searchHighlights" }
-            }
-        }
-    ]
-    try:
-        collection = mongodb_client[db_name]['embeddings']
-        results = list(collection.aggregate(pipeline))
-        return results
-    except Exception as e:
-        print(f"Text search error for query '{query}': {str(e)}")
-        return []
-
-def vector_search(query: str):
-    """Search using MongoDB Atlas Vector Search with vector index"""
-    # First, generate embedding for the query
-    query_embedding = Settings.embed_model.get_text_embedding(query)
-
-    # Perform vector search
-    pipeline = [
-        {
-            "$search": {
-                "index": "vector_index",
-                "knnBeta": {
-                    "vector": query_embedding,
-                    "path": "embedding",
-                    "k": 5,
-                    "similarity": "cosine"
-                }
-            }
-        },
-        {
-            "$project": {
-                "text": 1,
-                "url": 1,
-                "score": { "$meta": "searchScore" }
-            }
-        }
-    ]
-    try:
-        collection = mongodb_client[db_name]['embeddings']
-        results = list(collection.aggregate(pipeline))
-        return results
-    except Exception as e:
-        print(f"Vector search error for query '{query}': {str(e)}")
-        return []
-
-def hybrid_search(query: str):
-    """Hybrid search using both text and vector search capabilities"""
-    # First, generate embedding for the query
-    query_embedding = Settings.embed_model.get_text_embedding(query)
-
-    # Perform hybrid search
-    pipeline = [
-        {
-            "$search": {
-                "index": "vector_index", # We'll use the vector index but with compound operators
-                "compound": {
-                    "should": [
-                        {
-                            "text": {
-                                "query": query,
-                                "path": "text",
-                                "score": { "boost": { "value": 1.5 } }
-                            }
-                        },
-                        {
-                            "knnBeta": {
-                                "vector": query_embedding,
-                                "path": "embedding",
-                                "k": 10,
-                                "similarity": "cosine"
-                            }
-                        }
-                    ]
-                }
-            }
-        },
-        {
-            "$limit": 5
-        },
-        {
-            "$project": {
-                "text": 1,
-                "url": 1,
-                "score": { "$meta": "searchScore" }
-            }
-        }
-    ]
-    try:
-        collection = mongodb_client[db_name]['embeddings']
-        results = list(collection.aggregate(pipeline))
-        return results
-    except Exception as e:
-        print(f"Hybrid search error for query '{query}': {str(e)}")
-        return []
+# Import search functions from search.py
+from search import search_bar, text_search, vector_search, hybrid_search
 
 ##################################################
 ################## RAG Logic #####################
@@ -426,11 +288,11 @@ def get(q: str = None, request=None):
             cols_lg=3,
             cls="gap-4 mt-4"
         )
-    
+
     # If it's an HTMX request, just return the search results div
     if is_htmx:
         return search_results
-    
+
     # Otherwise, return the full page
     return Container(
         navbar(),
