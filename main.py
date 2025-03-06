@@ -135,14 +135,14 @@ def get():
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
             search_bar()),
-        Div(P('test'),id="search-results", cls="m-2"),
+        Div(id="search-results", cls="m-2"),
         cls=ContainerT.sm
     )
 
 @rt("/search/results")
 def get(q: str = None):
     """Search results endpoint that returns just the results grid"""
-    print("/search/resutls called")
+    print("/search/results called")
     if q and len(q) >= 2:
         # Perform all three types of searches
         text_results = text_search(q, mongodb_client, db_name)
