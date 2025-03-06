@@ -182,21 +182,21 @@ def search_bar():
     search_input = Input(type="search",
                          name="q",
                          placeholder="Search documents...",
-                         hx_trigger="keyup changed delay:500ms, search",
+                         hx_trigger="keyup changed delay:500ms",
+                         hx_get="/search",
+                         hx_target="#search-results",
                          cls="search-bar")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
-                          type="button")
+                          hx_get="/search",
+                          hx_target="#search-results",
+                          hx_include="closest div")
 
     # Using a Grid to place search input and button side by side
     search_form = Grid(
         Div(search_input, cls="col-span-5"),
         Div(search_button, cls="col-span-1"),
         cols=6,
-        hx_get="/search",
-        hx_target="#search-results",
-        hx_include="find input[name='q']",
-        hx_trigger="submit, click from:.primary",
         cls="items-center gap-2")
 
     return Div(search_form, Div(id="search-results", cls="m-2"), cls='pt-5')
@@ -387,9 +387,7 @@ def get():
     )
 
 @rt("/search")
-def get(q: str = None, request=None):
-    # Check if this is an HTMX request
-    is_htmx = request and request.headers.get('hx-request') == 'true'
+def get(q: str = None):
     search_results = Div(id="search-results", cls="m-2")
 
     if q and len(q) >= 2:
@@ -406,7 +404,8 @@ def get(q: str = None, request=None):
                 Ul(*[Li(
                     Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
                     P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in text_results])
+                ) for result in text_results]),
+                cls=CardT.primary
             ),
             Card(
                 H2("Vector Search", cls=TextT.primary),
@@ -429,12 +428,7 @@ def get(q: str = None, request=None):
             cols_lg=3,
             cls="gap-4 mt-4"
         )
-    
-    # If this is an HTMX request, just return the search results
-    if is_htmx:
-        return search_results
-    
-    # Otherwise return the full page
+
     return Container(
         navbar(),
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
