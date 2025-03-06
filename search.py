@@ -28,6 +28,7 @@ def search_bar():
 
 def text_search(query: str, mongodb_client, db_name):
     """Search using MongoDB Atlas Text Search with text index"""
+    print("text search ran")
     pipeline = [
         {
             "$search": {
@@ -63,6 +64,7 @@ def text_search(query: str, mongodb_client, db_name):
 
 def vector_search(query: str, mongodb_client, db_name):
     """Search using MongoDB Atlas Vector Search with vector index"""
+    print("vector search ran")
     # First, generate embedding for the query
     query_embedding = Settings.embed_model.get_text_embedding(query)
 
@@ -97,6 +99,7 @@ def vector_search(query: str, mongodb_client, db_name):
 
 def hybrid_search(query: str, mongodb_client, db_name):
     """Hybrid search using both text and vector search capabilities"""
+    print("hybrid search ran")
     # First, generate embedding for the query
     query_embedding = Settings.embed_model.get_text_embedding(query)
 
