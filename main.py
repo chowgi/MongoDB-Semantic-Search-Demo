@@ -182,7 +182,6 @@ def search_bar():
     search_input = Input(type="search",
                          name="q",
                          placeholder="Search documents...",
-                         hx_trigger="keyup changed delay:500ms",
                          hx_get="/search",
                          hx_target="#search-results",
                          cls="search-bar")
