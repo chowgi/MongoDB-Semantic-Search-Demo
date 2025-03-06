@@ -180,15 +180,15 @@ def check_and_scrape_collection(mongodb_client, db_name, website_url, storage_co
 
 def search_bar():
     search_input = Input(type="search",
-                         name="search",
-                         placeholder="Search products...",
-                         hx_get="/search/autocomplete",
-                         hx_trigger="keyup changed delay:50ms, search",
+                         name="q",
+                         placeholder="Search documents...",
+                         hx_trigger="keyup changed delay:500ms",
+                         hx_get="/search",
                          hx_target="#search-results",
                          cls="search-bar")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
-                          hx_get="/search/autocomplete",
+                          hx_get="/search",
                           hx_target="#search-results",
                           hx_include="closest div")
 
@@ -199,7 +199,7 @@ def search_bar():
         cols=6,
         cls="items-center gap-2")
 
-    return Div(search_form, cls='pt-5')
+    return Div(search_form, Div(id="search-results", cls="m-2"), cls='pt-5')
 
 def text_search(query: str):
     """Search using MongoDB Atlas Text Search with text index"""
@@ -240,7 +240,7 @@ def vector_search(query: str):
     """Search using MongoDB Atlas Vector Search with vector index"""
     # First, generate embedding for the query
     query_embedding = Settings.embed_model.get_text_embedding(query)
-    
+
     # Perform vector search
     pipeline = [
         {
@@ -274,7 +274,7 @@ def hybrid_search(query: str):
     """Hybrid search using both text and vector search capabilities"""
     # First, generate embedding for the query
     query_embedding = Settings.embed_model.get_text_embedding(query)
-    
+
     # Perform hybrid search
     pipeline = [
         {
@@ -389,13 +389,13 @@ def get():
 @rt("/search")
 def get(q: str = None):
     search_results = Div(id="search-results", cls="m-2")
-    
+
     if q and len(q) >= 2:
         # Perform all three types of searches
         text_results = text_search(q)
         vector_results = vector_search(q)
         hybrid_results = hybrid_search(q)
-        
+
         # Create the comparison display
         search_results = Grid(
             Card(
@@ -428,7 +428,7 @@ def get(q: str = None):
             cols_lg=3,
             cls="gap-4 mt-4"
         )
-    
+
     return Container(
         navbar(),
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
