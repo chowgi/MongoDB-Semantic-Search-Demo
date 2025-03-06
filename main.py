@@ -405,8 +405,7 @@ def get(q: str = None, request=None):
                 Ul(*[Li(
                     Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
                     P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in text_results]),
-                cls=CardT.primary
+                ) for result in text_results])
             ),
             Card(
                 H2("Vector Search", cls=TextT.primary),
@@ -414,8 +413,7 @@ def get(q: str = None, request=None):
                 Ul(*[Li(
                     Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
                     P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in vector_results]),
-                cls=CardT.primary
+                ) for result in vector_results])
             ),
             Card(
                 H2("Hybrid Search", cls=TextT.primary),
@@ -423,8 +421,7 @@ def get(q: str = None, request=None):
                 Ul(*[Li(
                     Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
                     P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in hybrid_results]),
-                cls=CardT.primary
+                ) for result in hybrid_results])
             ),
             cols_lg=3,
             cls="gap-4 mt-4"
