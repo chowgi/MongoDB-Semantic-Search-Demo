@@ -8,7 +8,6 @@ def search_bar():
     search_input = Input(type="search",
                          name="q",
                          placeholder="Search documents...",
-                         hx_trigger="keyup changed delay:500ms, search",
                          cls="search-bar")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
@@ -21,8 +20,8 @@ def search_bar():
         cols=6,
         hx_get="/search",
         hx_target="#search-results",
-        hx_include="find input[name='q']",
-        hx_trigger="submit, click from:.primary",
+        hx_include="closest form",
+        hx_trigger="submit, click from:.primary, keyup[key=='Enter'] from:input[name='q']",
         cls="items-center gap-2")
 
     return Div(search_form, Div(id="search-results", cls="m-2"), cls='pt-5')

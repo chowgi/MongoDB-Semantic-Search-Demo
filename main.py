@@ -247,10 +247,12 @@ def get():
 
 @rt("/search")
 def get(q: str = None, request=None):
-    # Check if this is an HTMX request
+    # Check if this is an HTMX request - note the case sensitivity
     is_htmx = request and request.headers.get('HX-Request') == 'true'
     search_results = Div(id="search-results", cls="m-2")
 
+    print(f"Search query: '{q}', HTMX request: {is_htmx}")
+    
     if q and len(q) >= 2:
         # Perform all three types of searches
         text_results = text_search(q, mongodb_client, db_name)
