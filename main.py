@@ -242,8 +242,6 @@ def get():
     return Container(
         navbar(),
         use_case_cards(),
-        # Div(H4("A Simple Div with ml-20",style='background-color: red'), 
-        #    cls='pt-20'),
         cls=ContainerT.sm 
     )
 
@@ -255,9 +253,9 @@ def get(q: str = None, request=None):
 
     if q and len(q) >= 2:
         # Perform all three types of searches
-        text_results = text_search(q)
-        vector_results = vector_search(q)
-        hybrid_results = hybrid_search(q)
+        text_results = text_search(q, mongodb_client, db_name)
+        vector_results = vector_search(q, mongodb_client, db_name)
+        hybrid_results = hybrid_search(q, mongodb_client, db_name)
 
         # Create the comparison display
         search_results = Grid(
