@@ -77,8 +77,7 @@ def vector_search(query: str, mongodb_client, db_name):
                 "knnBeta": {
                     "vector": query_embedding,
                     "path": "embedding",
-                    "k": 5,
-                    "similarity": "cosine"
+                    "k": 5
                 }
             }
         },
@@ -104,34 +103,20 @@ def hybrid_search(query: str, mongodb_client, db_name):
     # First, generate embedding for the query
     query_embedding = Settings.embed_model.get_text_embedding(query)
 
-    # Perform hybrid search
+    # Perform hybrid search - Use a different approach without nesting knnBeta
+    # MongoDB Atlas doesn't allow knnBeta in compound queries
     pipeline = [
         {
             "$search": {
-                "index": "vector_index", # We'll use the vector index but with compound operators
-                "compound": {
-                    "should": [
-                        {
-                            "text": {
-                                "query": query,
-                                "path": "text",
-                                "score": { "boost": { "value": 1.5 } }
-                            }
-                        },
-                        {
-                            "knnBeta": {
-                                "vector": query_embedding,
-                                "path": "embedding",
-                                "k": 10,
-                                "similarity": "cosine"
-                            }
-                        }
-                    ]
+                "index": "vector_index",
+                "text": {
+                    "query": query,
+                    "path": "text"
                 }
             }
         },
         {
-            "$limit": 5
+            "$limit": 10
         },
         {
             "$project": {
@@ -141,10 +126,51 @@ def hybrid_search(query: str, mongodb_client, db_name):
             }
         }
     ]
+    
+    # Execute a separate vector search to combine results later
+    vector_pipeline = [
+        {
+            "$search": {
+                "index": "vector_index",
+                "knnBeta": {
+                    "vector": query_embedding,
+                    "path": "embedding",
+                    "k": 10
+                }
+            }
+        },
+        {
+            "$project": {
+                "text": 1,
+                "url": 1,
+                "score": { "$meta": "searchScore" }
+            }
+        }
+    ]
+    
     try:
         collection = mongodb_client[db_name]['embeddings']
-        results = list(collection.aggregate(pipeline))
-        return results
+        text_results = list(collection.aggregate(pipeline))
+        vector_results = list(collection.aggregate(vector_pipeline))
+        
+        # Combine and deduplicate results
+        seen_urls = set()
+        combined_results = []
+        
+        # Add text results first (giving them priority)
+        for result in text_results:
+            if result.get('url') not in seen_urls:
+                seen_urls.add(result.get('url'))
+                combined_results.append(result)
+        
+        # Add vector results next
+        for result in vector_results:
+            if result.get('url') not in seen_urls:
+                seen_urls.add(result.get('url'))
+                combined_results.append(result)
+        
+        # Return only up to 5 results
+        return combined_results[:5]
     except Exception as e:
         print(f"Hybrid search error for query '{query}': {str(e)}")
         return []
