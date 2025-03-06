@@ -13,7 +13,6 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="button")
 
-    # Using a Grid to place search input and button side by side
     search_form = Grid(
         Div(search_input, cls="col-span-5"),
         Div(search_button, cls="col-span-1"),
@@ -24,7 +23,7 @@ def search_bar():
         hx_trigger="submit, click from:.primary, keyup[key=='Enter'] from:input[name='q']",
         cls="items-center gap-2")
 
-    return Div(search_form, Div(id="search-results", cls="m-2"), cls='pt-5')
+    return Div(search_form, cls='pt-5')
 
 def text_search(query: str, mongodb_client, db_name):
     """Search using MongoDB Atlas Text Search with text index"""
