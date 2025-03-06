@@ -166,10 +166,16 @@ def check_and_scrape_collection(mongodb_client, db_name, website_url, storage_co
     else:
         print(f"Collection '{collection_name}' already contains {document_count} documents. Skipping scraping process.")
 
-def create_message_div(role, content):
+async def create_message_div(role, content):
+    from fasthtml.components import NotStr
+    
+    # Use NotStr to allow HTML content if it's an assistant response with sources
+    content_div = Div(NotStr(content) if role == "assistant" and "<br>" in str(content) else content, 
+                     cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}")
+    
     return Div(
         Div(role, cls="chat-header"),
-        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        content_div,
         cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 ##################################################
@@ -277,12 +283,32 @@ def post(message: str):
     ),Div(Loading(), id="loading")
 
 @rt("/get-response")
-def post(message: str):
-
-    ai_response = chat_engine.query(message)
-
-    return (
-        create_message_div("assistant", ai_response),
-        Div(id="loading", hx_swap_oob="true"))
+async def post(message: str):
+    try:
+        ai_response = await chat_engine.query(message)
+        
+        # Create a response that includes the source URLs
+        source_content = ""
+        if hasattr(ai_response, 'source_nodes') and ai_response.source_nodes:
+            source_content = "<br><br><strong>Sources:</strong><br>"
+            for i, source in enumerate(ai_response.source_nodes):
+                if 'url' in source.metadata:
+                    source_content += f"{i+1}. <a href='{source.metadata['url']}' target='_blank'>{source.metadata['url']}</a><br>"
+        
+        # Create the full response with main content and sources
+        full_response = f"{ai_response.response}{source_content}"
+        
+        response_div = await create_message_div("assistant", full_response)
+        return (
+            response_div,
+            Div(id="loading", hx_swap_oob="true")
+        )
+    except Exception as e:
+        print(f"Error generating response: {str(e)}")
+        error_div = await create_message_div("assistant", f"Sorry, I encountered an error: {str(e)}")
+        return (
+            error_div,
+            Div(id="loading", hx_swap_oob="true")
+        )
 
 serve()
