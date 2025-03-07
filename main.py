@@ -1,3 +1,4 @@
+from fasthtml.common import *
 from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
@@ -8,8 +9,9 @@ from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.llms.openai import OpenAI
 from llama_index.core.response.notebook_utils import display_source_node
 from pymongo.operations import SearchIndexModel
-from fasthtml.common import *
 from monsterui.all import *
+from monsterui.franken import ButtonT, TextT, CardT, ContainerT, TextPresets, SectionT
+from monsterui.daisy import LoadingT, Loading, AlertT
 import pymongo
 import os
 
@@ -183,21 +185,40 @@ def get():
 def get():
     """Main search page that displays the search form and empty results container"""
     search_results = Div(id="search-results", cls="m-2")
-    
+
     return Container(
         navbar(),
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
-            search_bar()),
+            search_bar(),
+            cls="container mx-auto p-4"), # Added container for styling
         Div(id="search-results", cls="m-2"),
         cls=ContainerT.lg
     )
 
+
 @rt("/search/results")
 def get(query: str = None, request=None):
-    
-    results = search(query)
-    
+    if query:
+        results = search(query, top_k=3) #Reduced top_k for grid display
+
+        # Prepare results for MonsterUI Grid display
+        cards = []
+        for mode, nodes in results.items():
+            for node in nodes:
+                card_content = Div(
+                    H4(f"Mode: {mode}"),
+                    P(node.text),
+                    P(f"Source: {node.source_node.source}")
+                )
+                cards.append(Card(card_content))
+
+        grid = Grid(*cards, cols_lg=3, cls="gap-4") # Display in a 3-column grid
+
+        return grid
+    else:
+        return P("Please enter a search query.")
+
 
 @rt("/rag")
 def get():
