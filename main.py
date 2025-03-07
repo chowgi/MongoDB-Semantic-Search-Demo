@@ -91,7 +91,21 @@ def text_search(query):
     )
 
     retrieved_nodes = retriever.retrieve(query)
-    return retrieved_nodes
+    
+    # Display detailed information about each node
+    text_results = []
+    for text_node in retrieved_nodes:
+        # Add node info to results
+        result = {
+            "text": text_node.node.text[:500],
+            "score": text_node.score,
+            "source": str(text_node.node.metadata.get("source", "Unknown"))
+        }
+        text_results.append(result)
+        # Display source node for debugging (optional)
+        display_source_node(text_node.node, source_length=500)
+    
+    return text_results
 
 ##################################################
 ################## RAG Logic #####################
@@ -193,7 +207,8 @@ def get(query: str = None, request=None):
                 P("Traditional keyword-based search using MongoDB text index."),
                 Ul(*[Li(
                     Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
-                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
+                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm),
+                    P(f"Source: {result['source']}", cls=TextPresets.muted_sm)
                 ) for result in text_results])
             ),
             Card(
