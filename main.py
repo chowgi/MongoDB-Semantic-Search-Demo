@@ -205,7 +205,7 @@ def get(query: str = None, request=None):
                 card_content = Div(
                     H4(f"Mode: {mode}"),
                     P(node.text),
-                    P(f"Source: {node.source_node.source}")
+                    P(f"Score: {node.score}" if hasattr(node, 'score') else "")
                 )
                 cards.append(Card(card_content))
 
