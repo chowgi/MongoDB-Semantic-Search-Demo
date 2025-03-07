@@ -2,10 +2,12 @@ from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from llama_index.llms.openai import OpenAI
-from llama_index.core import Document
+# from llama_index.core import Document
 from llama_index.core import VectorStoreIndex, StorageContext
-from llama_index.core.workflow import Context
+#from llama_index.core.workflow import Context
 from llama_index.llms.openai import OpenAI
+from llama_index.core.response.notebook_utils import display_source_node
+from pymongo.operations import SearchIndexModel
 from fasthtml.common import *
 from monsterui.all import *
 import pymongo
@@ -58,8 +60,40 @@ chat_engine = index.as_query_engine(similarity_top_k=3)
 ################# Search Logic ###################
 ##################################################
 
-# Import search functions from search.py
-from search import search_bar, text_search, vector_search, hybrid_search
+def search_bar():
+    search_input = Input(type="search",
+                         name="q",
+                         placeholder="Search documents...",
+                         cls="search-bar")
+    search_button = Button("Search", 
+                          cls=ButtonT.primary,
+                          type="submit")
+
+    search_form = Form(
+        Grid(
+            Div(search_input, cls="col-span-5"),
+            Div(search_button, cls="col-span-1"),
+            cols=6,
+            cls="items-center gap-2"
+        ),
+        hx_get="/search/results",
+        hx_target="#search-results",
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='q']"
+    )
+
+    return Div(search_form, cls='pt-5')
+
+def text_search(query):
+    # Text Only Search
+    retriever = index.as_retriever(
+        similarity_top_k=5,
+        vector_store_query_mode="text_search"
+    )
+
+    retrieved_nodes = retriever.retrieve(query)
+
+    for text_node in retrieved_nodes[:3]:
+        display_source_node(text_node, source_length=500)
 
 ##################################################
 ################## RAG Logic #####################
@@ -79,7 +113,7 @@ def create_message_div(role, content):
 
 
 ##################################################
-################  Nav And Home ###################
+##############  Nav And Home Page ################
 ##################################################
 
 def navbar():
@@ -122,7 +156,7 @@ def get():
     return Container(
         navbar(),
         use_case_cards(),
-        cls=ContainerT.sm 
+        cls=ContainerT.lg
     )
 
 @rt("/search")
@@ -136,7 +170,7 @@ def get():
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
             search_bar()),
         Div(id="search-results", cls="m-2"),
-        cls=ContainerT.sm
+        cls=ContainerT.lg
     )
 
 @rt("/search/results")
@@ -150,7 +184,7 @@ def get(q: str = None, request=None):
     
     if q and len(q) >= 2:
         # Perform all three types of searches
-        text_results = text_search(q, mongodb_client, db_name)
+        text_results = text_search(q)
         vector_results = vector_search(q, mongodb_client, db_name)
         hybrid_results = hybrid_search(q, mongodb_client, db_name)
 
@@ -210,7 +244,7 @@ def get():
                 hx_target="#chat-messages",
                 hx_swap="beforeend scroll:#chat-messages:bottom"
             )
-        ),cls=ContainerT.sm
+        ),cls=ContainerT.lg
     )
 
 @rt("/agents")

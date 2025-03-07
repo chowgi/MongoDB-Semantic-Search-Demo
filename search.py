@@ -4,28 +4,6 @@ from llama_index.embeddings.voyageai import VoyageEmbedding
 from fasthtml.common import *
 from monsterui.all import *
 
-def search_bar():
-    search_input = Input(type="search",
-                         name="q",
-                         placeholder="Search documents...",
-                         cls="search-bar")
-    search_button = Button("Search", 
-                          cls=ButtonT.primary,
-                          type="submit")
-
-    search_form = Form(
-        Grid(
-            Div(search_input, cls="col-span-5"),
-            Div(search_button, cls="col-span-1"),
-            cols=6,
-            cls="items-center gap-2"
-        ),
-        hx_get="/search/results",
-        hx_target="#search-results",
-        hx_trigger="submit, keyup[key=='Enter'] from:input[name='q']"
-    )
-
-    return Div(search_form, cls='pt-5')
 
 def text_search(query: str, mongodb_client, db_name):
     """Search using MongoDB Atlas Text Search with text index"""
