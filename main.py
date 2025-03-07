@@ -83,29 +83,37 @@ def search_bar():
 
     return Div(search_form, cls='pt-5')
 
-def text_search(query):
-    # Text Only Search
-    retriever = index.as_retriever(
-        similarity_top_k=5,
-        vector_store_query_mode="text_search"
-    )
+def search(query, top_k=5):
+    """
+    Retrieve nodes using different query modes and return results in a dictionary.
 
-    retrieved_nodes = retriever.retrieve(query)
-    
-    # Display detailed information about each node
-    text_results = []
-    for text_node in retrieved_nodes:
-        # Add node info to results
-        result = {
-            "text": text_node.node.text[:500],
-            "score": text_node.score,
-            "source": str(text_node.node.metadata.get("source", "Unknown"))
-        }
-        text_results.append(result)
-        # Display source node for debugging (optional)
-        display_source_node(text_node.node, source_length=500)
-    
-    return text_results
+    Args:
+        query (str): The query string
+        top_k (int): Number of top results to retrieve
+
+    Returns:
+        dict: Dictionary with keys as modes and values as retrieved nodes
+    """
+    modes = ["text_search", "default", "hybrid"]  # default is vector
+    results = {}
+
+    for mode in modes:
+        # Create a retriever with the specific mode
+        retriever = index.as_retriever(
+            similarity_top_k=top_k,
+            vector_store_query_mode=mode
+        )
+
+        # Retrieve nodes using the current mode
+        retrieved_nodes = retriever.retrieve(query)
+
+        # Map 'default' to 'vector' in the results dictionary for clarity
+        mode_name = "vector" if mode == "default" else mode
+
+        # Store the retrieved nodes in the results dictionary
+        results[mode_name] = retrieved_nodes
+
+    return results
 
 ##################################################
 ################## RAG Logic #####################
@@ -187,51 +195,9 @@ def get():
 
 @rt("/search/results")
 def get(query: str = None, request=None):
-    """Search results endpoint that returns just the results grid"""
-    # Check if this is an HTMX request - note the case sensitivity
-    is_htmx = request and request.headers.get('HX-Request') == 'true'
-    search_results = Div(id="search-results", cls="m-2")
-
-    print(f"Search query: '{query}', HTMX request: {is_htmx}")
     
-    if query and len(query) >= 2:
-        # Perform all three types of searches
-        text_results = text_search(query)
-        vector_results = vector_search(query, mongodb_client, db_name)
-        hybrid_results = hybrid_search(query, mongodb_client, db_name)
-
-        # Create the comparison display
-        search_results = Grid(
-            Card(
-                H2("Text Search", cls=TextT.primary),
-                P("Traditional keyword-based search using MongoDB text index."),
-                Ul(*[Li(
-                    Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
-                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm),
-                    P(f"Source: {result['source']}", cls=TextPresets.muted_sm)
-                ) for result in text_results])
-            ),
-            Card(
-                H2("Vector Search", cls=TextT.primary),
-                P("Semantic search based on embeddings vector similarity."),
-                Ul(*[Li(
-                    Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
-                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in vector_results])
-            ),
-            Card(
-                H2("Hybrid Search", cls=TextT.primary),
-                P("Combined approach using both text and vector search."),
-                Ul(*[Li(
-                    Div(result["text"][:150] + ('...' if len(result["text"]) > 150 else ''), cls="mb-2"),
-                    P(f"Score: {result['score']:.3f}", cls=TextPresets.muted_sm)
-                ) for result in hybrid_results])
-            ),
-            cols_lg=3,
-            cls="gap-4 mt-4"
-        )
+    results = search(query)
     
-    return search_results
 
 @rt("/rag")
 def get():
