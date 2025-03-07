@@ -91,9 +91,7 @@ def text_search(query):
     )
 
     retrieved_nodes = retriever.retrieve(query)
-
-    for text_node in retrieved_nodes[:3]:
-        display_source_node(text_node, source_length=500)
+    return retrieved_nodes
 
 ##################################################
 ################## RAG Logic #####################
