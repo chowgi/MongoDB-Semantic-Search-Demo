@@ -198,10 +198,20 @@ def get(query: str = None, request=None):
     if query:
         results = search(query, top_k=3) #Reduced top_k for grid display
 
-        # Prepare results for MonsterUI Grid display
+        # Create a dictionary to track seen content to avoid duplicates
+        # Use text content as the key since that's what appears to be duplicated
+        seen_texts = {}
         cards = []
+        
         for mode, nodes in results.items():
             for node in nodes:
+                # Skip this node if we've already seen this text
+                if node.text in seen_texts:
+                    continue
+                
+                # Mark this text as seen
+                seen_texts[node.text] = True
+                
                 card_content = Div(
                     H4(f"Mode: {mode}"),
                     P(node.text),
