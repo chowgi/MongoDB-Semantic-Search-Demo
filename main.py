@@ -62,7 +62,7 @@ chat_engine = index.as_query_engine(similarity_top_k=3)
 
 def search_bar():
     search_input = Input(type="search",
-                         name="q",
+                         name="query",
                          placeholder="Search documents...",
                          cls="search-bar")
     search_button = Button("Search", 
@@ -78,7 +78,7 @@ def search_bar():
         ),
         hx_get="/search/results",
         hx_target="#search-results",
-        hx_trigger="submit, keyup[key=='Enter'] from:input[name='q']"
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']"
     )
 
     return Div(search_form, cls='pt-5')
@@ -174,19 +174,19 @@ def get():
     )
 
 @rt("/search/results")
-def get(q: str = None, request=None):
+def get(query: str = None, request=None):
     """Search results endpoint that returns just the results grid"""
     # Check if this is an HTMX request - note the case sensitivity
     is_htmx = request and request.headers.get('HX-Request') == 'true'
     search_results = Div(id="search-results", cls="m-2")
 
-    print(f"Search query: '{q}', HTMX request: {is_htmx}")
+    print(f"Search query: '{query}', HTMX request: {is_htmx}")
     
-    if q and len(q) >= 2:
+    if query and len(query) >= 2:
         # Perform all three types of searches
-        text_results = text_search(q)
-        vector_results = vector_search(q, mongodb_client, db_name)
-        hybrid_results = hybrid_search(q, mongodb_client, db_name)
+        text_results = text_search(query)
+        vector_results = vector_search(query, mongodb_client, db_name)
+        hybrid_results = hybrid_search(query, mongodb_client, db_name)
 
         # Create the comparison display
         search_results = Grid(
