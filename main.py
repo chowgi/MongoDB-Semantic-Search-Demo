@@ -204,11 +204,13 @@ def get(query: str = None, request=None):
                 node_content = Div(
                     P(node.node.text[:200]),
                     P(f"Score: {node.score}"),
-                    P("Source: ", cls=text-success,
+                    P("Source: ", 
                       A(
                         node.metadata['url'],
                         href=node.metadata['url'],
-                        target='_blank')
+                        target='_blank'
+                      ),
+                      cls="text-success"
                     )
                 )
                 card_content.append(node_content)
