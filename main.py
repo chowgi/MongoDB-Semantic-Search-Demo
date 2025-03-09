@@ -11,7 +11,7 @@ import os
 
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
-app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title="Test")
+app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title="MongoDB + Voyage AI Demo")
 
 # Retrieve environment variables for necessary API keys and URIs
 openai_api_key = os.environ['OPENAI_API_KEY']
@@ -166,7 +166,7 @@ def use_case_cards():
 
 @rt("/")
 def get():
-    return Container(
+    return Title("MongoDB + Voyage AI Demo"), Container(
         navbar(),
         use_case_cards(),
         cls=ContainerT.lg
@@ -177,7 +177,7 @@ def get():
     """Main search page that displays the search form and empty results container"""
     search_results = Div(id="search-results", cls="m-2")
 
-    return Container(
+    return Title("Search - MongoDB Atlas Demo"), Container(
         navbar(),
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
