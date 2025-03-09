@@ -166,7 +166,7 @@ def use_case_cards():
 
 @rt("/")
 def get():
-    return Title("MongoDB + Voyage AI Demo"), Container(
+    return Title("MongoDB + Voyage AI"), Container(
         navbar(),
         use_case_cards(),
         cls=ContainerT.lg
@@ -179,8 +179,8 @@ def get():
 
     return Title("Search - MongoDB Atlas Demo"), Container(
         navbar(),
-        Div(H2("MongoDB Atlas Search Comparison", cls="pb-10"),
-            P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5"),
+        Div(H2("MongoDB Atlas Search Comparison", cls="pb-10 text-center"),
+            P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
             cls="container mx-auto p-4"), # Added container for styling
         Div(id="search-results", cls="m-2"),
@@ -204,7 +204,8 @@ def get(query: str = None, request=None):
                 node_content = Div(
                     P(node.node.text[:200]),
                     P(f"Score: {node.score}"),
-                    P("Source: ", A(
+                    P("Source: ", cls=text-success,
+                      A(
                         node.metadata['url'],
                         href=node.metadata['url'],
                         target='_blank')
