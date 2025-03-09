@@ -38,7 +38,7 @@ mongodb_client = pymongo.MongoClient(mongodb_uri)
 store = MongoDBAtlasVectorSearch(
     mongodb_client, 
     db_name=db_name, 
-    collection_name='embeddings', 
+    collection_name='embeddings', #<--- do I need this?
     embedding_key="embedding",
     text_key="text",
     fulltext_index_name="text_index",
