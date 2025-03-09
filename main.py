@@ -197,24 +197,33 @@ def get(query: str = None, request=None):
         cards = []  # Initialize the cards list
         for mode_name, nodes in results.items(): 
 
-            card_title = H4(f"Mode: {mode_name}")
+            card_title = H4(f"Mode: {mode_name}", cls="text-lg font-bold mb-2")
             card_content = []
             for node in nodes:
+                # Create a styled div for each node
+                text_preview = node.node.text[:200] + ("..." if len(node.node.text) > 200 else "")
 
-                # Create a div for each node and add it to the card content
                 node_content = Div(
-                    P(node.node.text[:200]),
-                    P(f"Score: {node.score}"),
-                    A(
-                        node.metadata['url'],
-                        href=node.metadata['url'],
-                        target="_blank"
-                    )
+                    Div(
+                        P(text_preview, cls="mb-2 text-sm"),
+                        cls="p-3 bg-gray-100 rounded-md mb-2"
+                    ),
+                    Div(
+                        Div(f"Score: {node.score:.4f}", cls="text-xs text-gray-600 mb-1"),
+                        A(
+                            f"Source: {node.metadata['url']}",
+                            href=node.metadata['url'],
+                            target="_blank",
+                            cls="text-xs text-blue-600 hover:underline"
+                        ),
+                        cls="flex flex-col"
+                    ),
+                    cls="mb-4 border-b pb-3"
                 )
                 card_content.append(node_content)
 
             # Add the completed card with a title and content to the list
-            cards.append(Card(card_title, *card_content))
+            cards.append(Card(card_title, *card_content, cls="h-full overflow-auto"))
 
         grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
 
