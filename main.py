@@ -3,9 +3,7 @@ from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from llama_index.llms.openai import OpenAI
-# from llama_index.core import Document
 from llama_index.core import VectorStoreIndex, StorageContext
-#from llama_index.core.workflow import Context
 from llama_index.llms.openai import OpenAI
 from monsterui.all import *
 import pymongo
@@ -37,7 +35,14 @@ Settings.embed_model = VoyageEmbedding(
 mongodb_client = pymongo.MongoClient(mongodb_uri)
 
 # Set up MongoDB Atlas Vector Search connection with specified database and collection
-store = MongoDBAtlasVectorSearch(mongodb_client, db_name=db_name, collection_name='embeddings')
+store = MongoDBAtlasVectorSearch(
+    mongodb_client, 
+    db_name=db_name, 
+    collection_name='embeddings', #<--- do I need this?
+    embedding_key="embedding",
+    text_key="text",
+    fulltext_index_name="text_index",
+)
 
 # Initialize the storage context for vector store operations
 storage_context = StorageContext.from_defaults(vector_store=store)
@@ -82,18 +87,8 @@ def search_bar():
     return Div(search_form, cls='pt-5')
 
 def search(query, top_k=5):
-    """
-    Retrieve nodes using different query modes and return results in a dictionary.
-
-    Args:
-        query (str): The query string
-        top_k (int): Number of top results to retrieve
-
-    Returns:
-        dict: Dictionary with keys as modes and values as retrieved nodes
-    """
     modes = ["text_search", "default", "hybrid"]  # default is vector
-    results = {}
+    results = {}  # Initialize results as an empty dictionary
 
     for mode in modes:
         # Create a retriever with the specific mode
@@ -105,13 +100,13 @@ def search(query, top_k=5):
         # Retrieve nodes using the current mode
         retrieved_nodes = retriever.retrieve(query)
 
-        # Map 'default' to 'vector' in the results dictionary for clarity
-        mode_name = "vector" if mode == "default" else mode
+        # Map modes to titles for clarity
+        mode_name = "Text Only" if mode == "text_search" else ("Vector Only" if mode == "default" else "Hybrid")
 
-        # Store the retrieved nodes in the results dictionary
+        # Store the retrieved nodes in the results dictionary using mode_name as key
         results[mode_name] = retrieved_nodes
 
-    return results
+    return results  
 
 ##################################################
 ################## RAG Logic #####################
@@ -196,30 +191,32 @@ def get():
 @rt("/search/results")
 def get(query: str = None, request=None):
     if query:
-        results = search(query, top_k=3) #Reduced top_k for grid display
+        results = search(query, top_k=3)
 
-        # Create a dictionary to track seen content to avoid duplicates
-        # Use text content as the key since that's what appears to be duplicated
-        seen_texts = {}
-        cards = []
-        
-        for mode, nodes in results.items():
+        # Create a card for each mode with the mode_name as the title
+        cards = []  # Initialize the cards list
+        for mode_name, nodes in results.items(): 
+
+            card_title = H4(f"Mode: {mode_name}")
+            card_content = []
             for node in nodes:
-                # Skip this node if we've already seen this text
-                if node.text in seen_texts:
-                    continue
-                
-                # Mark this text as seen
-                seen_texts[node.text] = True
-                
-                card_content = Div(
-                    H4(f"Mode: {mode}"),
-                    P(node.text),
-                    P(f"Score: {node.score}" if hasattr(node, 'score') else "")
-                )
-                cards.append(Card(card_content))
 
-        grid = Grid(*cards, cols_lg=3, cls="gap-4") # Display in a 3-column grid
+                # Create a div for each node and add it to the card content
+                node_content = Div(
+                    P(node.node.text[:200]),
+                    P(f"Score: {node.score}"),
+                    A(
+                        node.metadata['url'],
+                        href=node.metadata['url'],
+                        target="_blank"
+                    )
+                )
+                card_content.append(node_content)
+
+            # Add the completed card with a title and content to the list
+            cards.append(Card(card_title, *card_content))
+
+        grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
 
         return grid
     else:
