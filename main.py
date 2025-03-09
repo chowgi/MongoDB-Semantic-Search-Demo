@@ -11,7 +11,7 @@ import os
 
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
-app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True)
+app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title="Test")
 
 # Retrieve environment variables for necessary API keys and URIs
 openai_api_key = os.environ['OPENAI_API_KEY']
@@ -201,15 +201,14 @@ def get(query: str = None, request=None):
             card_content = []
             for node in nodes:
 
-                # Create a div for each node and add it to the card content
                 node_content = Div(
                     P(node.node.text[:200]),
                     P(f"Score: {node.score}"),
-                    P(f"Source: {A(
+                    P("Source: ", A(
                         node.metadata['url'],
                         href=node.metadata['url'],
-                        target='_blank')}"
-                    ),
+                        target='_blank')
+                    )
                 )
                 card_content.append(node_content)
 
