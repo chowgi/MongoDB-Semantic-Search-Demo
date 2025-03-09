@@ -207,8 +207,8 @@ def get(query: str = None, request=None):
                     P(f"Score: {node.score}"),
                     P(f"Source: {A(
                         node.metadata['url'],
-                        href=node.metadata['url'],
-                        target='_blank')}")
+                        href=node.metadata['url']}"
+                    ),
                 )
                 card_content.append(node_content)
 
