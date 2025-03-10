@@ -8,8 +8,6 @@ from llama_index.llms.openai import OpenAI
 from monsterui.all import *
 import pymongo
 import os
-import uuid
-from datetime import datetime
 
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
@@ -36,20 +34,11 @@ Settings.embed_model = VoyageEmbedding(
 # Establish MongoDB client connection using the provided URI
 mongodb_client = pymongo.MongoClient(mongodb_uri)
 
-# Set up MongoDB for chat sessions
-chat_db = mongodb_client[db_name]
-chat_sessions_collection = chat_db["chat_sessions"]
-chat_messages_collection = chat_db["chat_messages"]
-
-# Create indexes for faster lookups
-chat_sessions_collection.create_index("created_at")
-chat_messages_collection.create_index("session_id")
-
 # Set up MongoDB Atlas Vector Search connection with specified database and collection
 store = MongoDBAtlasVectorSearch(
     mongodb_client, 
     db_name=db_name, 
-    collection_name='embeddings',
+    collection_name='embeddings', #<--- do I need this?
     embedding_key="embedding",
     text_key="text",
     fulltext_index_name="text_index",
@@ -67,56 +56,6 @@ chat_engine = index.as_query_engine(similarity_top_k=3)
 ##################################################
 ########## Settings and Admin Logic ##############
 ##################################################
-
-def create_chat_session(title="New Chat"):
-    """Create a new chat session"""
-    session_id = str(uuid.uuid4())
-    session = {
-        "_id": session_id,
-        "title": title,
-        "created_at": datetime.now(),
-        "updated_at": datetime.now()
-    }
-    chat_sessions_collection.insert_one(session)
-    return session_id
-
-def get_chat_sessions(limit=10):
-    """Get most recent chat sessions"""
-    return list(chat_sessions_collection.find().sort("updated_at", -1).limit(limit))
-
-def save_message(session_id, role, content):
-    """Save a message to a chat session"""
-    message = {
-        "session_id": session_id,
-        "role": role,
-        "content": content,
-        "timestamp": datetime.now()
-    }
-    chat_messages_collection.insert_one(message)
-    # Update the session's updated_at time
-    chat_sessions_collection.update_one(
-        {"_id": session_id},
-        {"$set": {"updated_at": datetime.now()}}
-    )
-    return message
-
-def get_chat_messages(session_id):
-    """Get all messages for a chat session"""
-    return list(chat_messages_collection.find(
-        {"session_id": session_id}
-    ).sort("timestamp", 1))
-
-def delete_chat_session(session_id):
-    """Delete a chat session and all its messages"""
-    chat_sessions_collection.delete_one({"_id": session_id})
-    chat_messages_collection.delete_many({"session_id": session_id})
-    
-def update_session_title(session_id, title):
-    """Update the title of a chat session"""
-    chat_sessions_collection.update_one(
-        {"_id": session_id},
-        {"$set": {"title": title, "updated_at": datetime.now()}}
-    )
 
 
 
@@ -300,56 +239,15 @@ def get(query: str = None, request=None):
 
 @rt("/rag")
 def get():
-    # Get recent chat sessions
-    recent_chats = get_chat_sessions(limit=10)
-    
-    # Create chat history sidebar
-    chat_items = []
-    for chat in recent_chats:
-        chat_items.append(
-            Li(
-                A(
-                    DivLAligned(
-                        UkIcon("message-circle"),
-                        P(chat["title"], cls="ml-2 truncate")
-                    ),
-                    hx_get=f"/rag/session/{chat['_id']}",
-                    hx_target="#chat-container",
-                    cls="block p-2 hover:bg-secondary rounded"
-                ),
-                DivRAligned(
-                    UkIcon("trash", 
-                          hx_delete=f"/rag/session/{chat['_id']}",
-                          hx_confirm="Are you sure you want to delete this chat?",
-                          hx_target="#chat-history",
-                          cls="text-destructive cursor-pointer")
-                )
-            )
-        )
-    
-    # Create New Chat button
-    new_chat_button = Button(
-        DivLAligned(UkIcon("plus-circle"), P("New Chat", cls="ml-2")),
-        cls=ButtonT.primary + " w-full mb-4",
-        hx_post="/rag/new-session",
-        hx_target="#chat-container"
-    )
-    
-    chat_history = Div(
-        new_chat_button,
-        H3("Recent Chats", cls="mb-2"),
-        Ul(*chat_items, id="chat-history", cls="space-y-1"),
-        cls="w-1/4 border-r border-border p-4 h-[80vh] overflow-y-auto"
-    )
-    
-    # Create empty or new chat container
-    chat_container = Div(
-        # This will be replaced when a chat is selected or created
+    return Container(
+        navbar(),
+        Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
+            P("Talk to your own doc's or website", cls="pb-5 text-center uk-text-lead"),
         Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
                 style="overflow: auto"
-            ),
+               ),
             Form(
                 TextArea(id="message", placeholder="Type your message..."),
                 Button(
@@ -365,21 +263,7 @@ def get():
                 hx_target="#chat-messages",
                 hx_swap="beforeend scroll:#chat-messages:bottom"
             )
-        ),
-        id="chat-container",
-        cls="w-3/4 p-4"
-    )
-    
-    return Container(
-        navbar(),
-        Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
-            P("Deliver contextually relevant and accurate responses based on up-to-date private data sources.", cls="pb-5 text-center uk-text-lead")),
-        Div(
-            chat_history,
-            chat_container,
-            cls="flex h-full"
-        ),
-        cls=ContainerT.lg
+        ),cls=ContainerT.lg
     )
 
 @rt("/agents")
@@ -398,185 +282,20 @@ def get():
         cls=ContainerT.sm
     )
 
-@rt("/rag/new-session")
-def post():
-    """Create a new chat session"""
-    session_id = create_chat_session()
-    
-    return Card(
-        Div(id="chat-messages", 
-            cls="space-y-4 h-[60vh] overflow-y-auto p-4",
-            style="overflow: auto"
-        ),
-        Div(
-            TextArea(id="message", placeholder="Type your message..."),
-            Button(
-                "Send",
-                cls=ButtonT.primary,
-                hx_post=f"/send-message/{session_id}",
-                hx_target="#chat-messages",
-                hx_swap="beforeend scroll:#chat-messages:bottom"
-            ),
-            cls="space-y-2",
-            hx_trigger=f"keydown[key=='Enter' && !shiftKey]",
-            hx_post=f"/send-message/{session_id}",
-            hx_target="#chat-messages",
-            hx_swap="beforeend scroll:#chat-messages:bottom"
-        ),
-        Hidden(id="session-id", value=session_id)
-    )
-
-@rt("/rag/session/{session_id}")
-def get(session_id: str):
-    """Get an existing chat session"""
-    # Get the chat messages
-    messages = get_chat_messages(session_id)
-    
-    # Create message divs
-    message_divs = [create_message_div(msg["role"], msg["content"]) for msg in messages]
-    
-    return Card(
-        Div(*message_divs,
-            id="chat-messages", 
-            cls="space-y-4 h-[60vh] overflow-y-auto p-4",
-            style="overflow: auto"
-        ),
-        Div(
-            TextArea(id="message", placeholder="Type your message..."),
-            Button(
-                "Send",
-                cls=ButtonT.primary,
-                hx_post=f"/send-message/{session_id}",
-                hx_target="#chat-messages",
-                hx_swap="beforeend scroll:#chat-messages:bottom"
-            ),
-            cls="space-y-2",
-            hx_trigger=f"keydown[key=='Enter' && !shiftKey]",
-            hx_post=f"/send-message/{session_id}",
-            hx_target="#chat-messages",
-            hx_swap="beforeend scroll:#chat-messages:bottom"
-        ),
-        Hidden(id="session-id", value=session_id)
-    )
-
-@rt("/rag/session/{session_id}")
-def delete(session_id: str):
-    """Delete a chat session"""
-    delete_chat_session(session_id)
-    
-    # Return updated chat history
-    recent_chats = get_chat_sessions(limit=10)
-    chat_items = []
-    for chat in recent_chats:
-        chat_items.append(
-            Li(
-                A(
-                    DivLAligned(
-                        UkIcon("message-circle"),
-                        P(chat["title"], cls="ml-2 truncate")
-                    ),
-                    hx_get=f"/rag/session/{chat['_id']}",
-                    hx_target="#chat-container",
-                    cls="block p-2 hover:bg-secondary rounded"
-                ),
-                DivRAligned(
-                    UkIcon("trash", 
-                          hx_delete=f"/rag/session/{chat['_id']}",
-                          hx_confirm="Are you sure you want to delete this chat?",
-                          hx_target="#chat-history",
-                          cls="text-destructive cursor-pointer")
-                )
-            )
-        )
-    
-    return Ul(*chat_items, id="chat-history", cls="space-y-1")
-
-@rt("/send-message/{session_id}")
-def post(message: str, session_id: str):
-    """Send a message in a specific chat session"""
-    # Save the user message
-    save_message(session_id, "user", message)
-    
-    # If this is the first message, update the session title
-    session = chat_sessions_collection.find_one({"_id": session_id})
-    if session["title"] == "New Chat":
-        # Use first few words of message as title
-        title = " ".join(message.split()[:5])
-        if len(title) > 30:
-            title = title[:27] + "..."
-        update_session_title(session_id, title)
-        
-        # Update the chat history (OOB swap)
-        recent_chats = get_chat_sessions(limit=10)
-        chat_items = []
-        for chat in recent_chats:
-            chat_items.append(
-                Li(
-                    A(
-                        DivLAligned(
-                            UkIcon("message-circle"),
-                            P(chat["title"], cls="ml-2 truncate")
-                        ),
-                        hx_get=f"/rag/session/{chat['_id']}",
-                        hx_target="#chat-container",
-                        cls="block p-2 hover:bg-secondary rounded"
-                    ),
-                    DivRAligned(
-                        UkIcon("trash", 
-                              hx_delete=f"/rag/session/{chat['_id']}",
-                              hx_confirm="Are you sure you want to delete this chat?",
-                              hx_target="#chat-history",
-                              cls="text-destructive cursor-pointer")
-                    )
-                )
-            )
-        
-        chat_history_update = Ul(*chat_items, id="chat-history", cls="space-y-1", hx_swap_oob="true")
-    else:
-        chat_history_update = ""
-    
-    return (
-        create_message_div("user", message),
-        TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post=f"/get-response/{session_id}", hx_vals=f'{{"message": "{message}"}}',
-            hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom"),
-        chat_history_update,
-        Div(Loading(cls=LoadingT.dots), id="loading")
-    )
-
-@rt("/get-response/{session_id}")
-def post(message: str, session_id: str):
-    """Get AI response for a message in a specific chat session"""
-    # Get the AI response
-    ai_response = chat_engine.query(message)
-    
-    # Save the AI response
-    save_message(session_id, "assistant", str(ai_response))
-
-    return (
-        create_message_div("assistant", ai_response),
-        Div(id="loading", hx_swap_oob="true"))
-
-# Keep the original routes for backward compatibility
 @rt("/send-message")
 def post(message: str):
-    # Create a new session for messages sent without a session
-    session_id = create_chat_session()
-    save_message(session_id, "user", message)
-    
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post=f"/get-response/{session_id}", hx_vals=f'{{"message": "{message}"}}',
-            hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom"),
-        Div(Loading(cls=LoadingT.dots), id="loading")
-    )
+        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
+            hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
+    ),Div(Loading(cls=LoadingT.dots), id="loading")
 
 @rt("/get-response")
 def post(message: str):
-    # For backward compatibility - just use the new endpoint
+
     ai_response = chat_engine.query(message)
-    
+
     return (
         create_message_div("assistant", ai_response),
         Div(id="loading", hx_swap_oob="true"))
