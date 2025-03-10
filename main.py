@@ -213,8 +213,7 @@ def get(query: str = None, request=None):
             for node in nodes:
 
                 node_content = Div(
-                    P(Strong("Retrieved Node:"), cls=TextT.sm),
-                    P(node.node.text[:200]),
+                    P(Strong("Retrieved Node:"), f" {node.node.text[:200]}", cls=TextT.sm),
                     P(Strong("Score:"), f" {node.score}", cls=TextT.sm),
                     P(Strong("Source:"), " ", 
                       A(
