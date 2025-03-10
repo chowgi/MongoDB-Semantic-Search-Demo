@@ -189,22 +189,26 @@ def get():
 @rt("/search/start")
 def start_search(query: str):
     """Show loading spinner while fetching search results."""
-    loading_indicator = Div(Loading(), id="loading")
+    loading_indicator = Div(
+        Loading(), 
+        id="loading",
+        hx_get=f"/search/results?query={query}"
+    )
     # Initiate the search without returning results yet
-    return loading_indicator, hx_get=f"/search/results?query={query}"
+    return loading_indicator
 
-        @rt("/search/results")
-        def get_results(query: str = None, request=None):
-
-            clear_search_bar = Input(type="search",
-                 name="query",
-                 placeholder="Search documents...",
-                 cls="search-bar",
-                 id="search-input",
-                 hx_swap_oob="true")
-
-            if query:
-                results = search(query, top_k=5)
+@rt("/search/results")
+def get_results(query: str = None, request=None):
+    
+    clear_search_bar = Input(type="search",
+         name="query",
+         placeholder="Search documents...",
+         cls="search-bar",
+         id="search-input",
+         hx_swap_oob="true")
+    
+    if query:
+        results = search(query, top_k=5)
                 # Create a card for each mode with the mode_name as the title
                 cards = []  # Initialize the cards list
                 for mode_name, nodes in results.items(): 
