@@ -243,41 +243,6 @@ def get(query: str = None, request=None):
 
         # Mode descriptions and alert styles
         mode_info = {
-
-
-@rt("/update-settings")
-def post(mongodb_uri: str = None, db_name: str = None, collection_name: str = None, 
-         voyage_api_key: str = None, embedding_model: str = None, website_url: str = None):
-    # In a production app, you would update environment variables or a configuration file
-    # For this demo, we'll just return a success message
-    
-    return Alert(
-        DivLAligned(UkIcon("check"), Span("Settings updated successfully!")),
-        cls=(AlertT.success, "mb-4"),
-        hx_swap_oob="true"
-    )
-
-@rt("/reset-vector-store")
-def post():
-    # In a production app, this would delete the MongoDB collection and recreate it
-    try:
-        # Simulate database reset with a delay
-        import time
-        time.sleep(2)
-        
-        return Alert(
-            DivLAligned(UkIcon("check"), Span("Vector store reset successfully!")),
-            cls=(AlertT.success, "mb-4"),
-            hx_swap_oob="true"
-        )
-    except Exception as e:
-        return Alert(
-            DivLAligned(UkIcon("warning"), Span(f"Error: {str(e)}")),
-            cls=(AlertT.error, "mb-4"),
-            hx_swap_oob="true"
-        )
-
-
             "Text Search": {
                 "description": "Uses traditional keyword-based searching to find exact matches in text.",
                 "alert_type": AlertT.info
@@ -428,6 +393,39 @@ def get():
                 LabelInput("MongoDB URI", id="mongodb_uri", type="password", value=mongodb_uri if mongodb_uri else "", placeholder="mongodb+srv://..."),
                 LabelInput("Database Name", id="db_name", value=db_name if db_name else "", placeholder="your_database_name"),
                 LabelInput("Collection Name", id="collection_name", value="embeddings", placeholder="embeddings"),
+
+@rt("/update-settings")
+def post(mongodb_uri: str = None, db_name: str = None, collection_name: str = None, 
+         voyage_api_key: str = None, embedding_model: str = None, website_url: str = None):
+    # In a production app, you would update environment variables or a configuration file
+    # For this demo, we'll just return a success message
+    
+    return Alert(
+        DivLAligned(UkIcon("check"), Span("Settings updated successfully!")),
+        cls=(AlertT.success, "mb-4"),
+        hx_swap_oob="true"
+    )
+
+@rt("/reset-vector-store")
+def post():
+    # In a production app, this would delete the MongoDB collection and recreate it
+    try:
+        # Simulate database reset with a delay
+        import time
+        time.sleep(2)
+        
+        return Alert(
+            DivLAligned(UkIcon("check"), Span("Vector store reset successfully!")),
+            cls=(AlertT.success, "mb-4"),
+            hx_swap_oob="true"
+        )
+    except Exception as e:
+        return Alert(
+            DivLAligned(UkIcon("warning"), Span(f"Error: {str(e)}")),
+            cls=(AlertT.error, "mb-4"),
+            hx_swap_oob="true"
+        )
+
                 LabelInput("Voyage AI API Key", id="voyage_api_key", type="password", value=voyage_api_key if voyage_api_key else "", placeholder="Enter your Voyage AI API key"),
                 H4("Indexing Settings", cls="mt-6 mb-2"),
                 Grid(
