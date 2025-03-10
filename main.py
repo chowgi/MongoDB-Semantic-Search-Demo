@@ -209,32 +209,32 @@ def get_results(query: str = None, request=None):
     
     if query:
         results = search(query, top_k=5)
-                # Create a card for each mode with the mode_name as the title
-                cards = []  # Initialize the cards list
-                for mode_name, nodes in results.items(): 
-                    card_title = H4(f"Mode: {mode_name}")
-                    card_content = []
-                    for node in nodes:
-                        node_content = Div(
-                            P("Retrieved Node:"),
-                            P(node.node.text[:200]),
-                            P(f"Score: {node.score}", ),
-                            P("Source: ", 
-                              A(
-                                node.metadata['url'],
-                                href=node.metadata['url'],
-                                target='_blank',
-                                cls="text-primary"
-                              ),
-                            )
-                        )
-                        card_content.append(node_content)
-                    # Add the completed card with a title and content to the list
-                    cards.append(Card(card_title, *card_content))
-                grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
-                return clear_search_bar, grid
-            else:
-                return P("Please enter a search query.")
+        # Create a card for each mode with the mode_name as the title
+        cards = []  # Initialize the cards list
+        for mode_name, nodes in results.items(): 
+            card_title = H4(f"Mode: {mode_name}")
+            card_content = []
+            for node in nodes:
+                node_content = Div(
+                    P("Retrieved Node:"),
+                    P(node.node.text[:200]),
+                    P(f"Score: {node.score}", ),
+                    P("Source: ", 
+                      A(
+                        node.metadata['url'],
+                        href=node.metadata['url'],
+                        target='_blank',
+                        cls="text-primary"
+                      ),
+                    )
+                )
+                card_content.append(node_content)
+            # Add the completed card with a title and content to the list
+            cards.append(Card(card_title, *card_content))
+        grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
+        return clear_search_bar, grid
+    else:
+        return P("Please enter a search query.")
 
 @rt("/rag")
 def get():
