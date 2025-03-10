@@ -67,11 +67,13 @@ def search_bar():
     search_input = Input(type="search",
                          name="query",
                          placeholder="Search documents...",
-                         cls="search-bar")
+                         cls="search-bar",
+                         id="search-input",
+                         hx_get="/search/start",  # Directing to the new start_search route
+                         hx_trigger="submit, keyup[key=='Enter']")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
                           type="submit")
-
     search_form = Form(
         Grid(
             Div(search_input, cls="col-span-5"),
@@ -79,11 +81,8 @@ def search_bar():
             cols=6,
             cls="items-center gap-2"
         ),
-        hx_get="/search/results",
-        hx_target="#search-results",
-        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']"
+        hx_target="#search-results"
     )
-
     return Div(search_form, cls='pt-5')
 
 def search(query, top_k=5):
@@ -101,7 +100,7 @@ def search(query, top_k=5):
         retrieved_nodes = retriever.retrieve(query)
 
         # Map modes to titles for clarity
-        mode_name = "Text Only" if mode == "text_search" else ("Vector Only" if mode == "default" else "Hybrid")
+        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
 
         # Store the retrieved nodes in the results dictionary using mode_name as key
         results[mode_name] = retrieved_nodes
@@ -166,7 +165,7 @@ def use_case_cards():
 
 @rt("/")
 def get():
-    return Title("MongoDB + Voyage AI"), Container(
+    return Title("MongoDB + Voyage AI Demos"), Container(
         navbar(),
         use_case_cards(),
         cls=ContainerT.lg
@@ -177,7 +176,7 @@ def get():
     """Main search page that displays the search form and empty results container"""
     search_results = Div(id="search-results", cls="m-2")
 
-    return Title("Search - MongoDB Atlas Demo"), Container(
+    return Title("Search - MongoDB + Voyage AI"), Container(
         navbar(),
         Div(H2("MongoDB Atlas Search Comparison", cls="pb-10 text-center"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
@@ -187,43 +186,51 @@ def get():
         cls=ContainerT.lg
     )
 
+@rt("/search/start")
+def start_search(query: str):
+    """Show loading spinner while fetching search results."""
+    loading_indicator = Div(Loading(), id="loading")
+    # Initiate the search without returning results yet
+    return loading_indicator, hx_get=f"/search/results?query={query}"
 
-@rt("/search/results")
-def get(query: str = None, request=None):
-    if query:
-        results = search(query, top_k=3)
+        @rt("/search/results")
+        def get_results(query: str = None, request=None):
 
-        # Create a card for each mode with the mode_name as the title
-        cards = []  # Initialize the cards list
-        for mode_name, nodes in results.items(): 
+            clear_search_bar = Input(type="search",
+                 name="query",
+                 placeholder="Search documents...",
+                 cls="search-bar",
+                 id="search-input",
+                 hx_swap_oob="true")
 
-            card_title = H4(f"Mode: {mode_name}")
-            card_content = []
-            for node in nodes:
-
-                node_content = Div(
-                    P(node.node.text[:200]),
-                    P(f"Score: {node.score}"),
-                    P("Source: ", 
-                      A(
-                        node.metadata['url'],
-                        href=node.metadata['url'],
-                        target='_blank'
-                      ),
-                      cls="text-success"
-                    )
-                )
-                card_content.append(node_content)
-
-            # Add the completed card with a title and content to the list
-            cards.append(Card(card_title, *card_content))
-
-        grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
-
-        return grid
-    else:
-        return P("Please enter a search query.")
-
+            if query:
+                results = search(query, top_k=5)
+                # Create a card for each mode with the mode_name as the title
+                cards = []  # Initialize the cards list
+                for mode_name, nodes in results.items(): 
+                    card_title = H4(f"Mode: {mode_name}")
+                    card_content = []
+                    for node in nodes:
+                        node_content = Div(
+                            P("Retrieved Node:"),
+                            P(node.node.text[:200]),
+                            P(f"Score: {node.score}", ),
+                            P("Source: ", 
+                              A(
+                                node.metadata['url'],
+                                href=node.metadata['url'],
+                                target='_blank',
+                                cls="text-primary"
+                              ),
+                            )
+                        )
+                        card_content.append(node_content)
+                    # Add the completed card with a title and content to the list
+                    cards.append(Card(card_title, *card_content))
+                grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
+                return clear_search_bar, grid
+            else:
+                return P("Please enter a search query.")
 
 @rt("/rag")
 def get():
