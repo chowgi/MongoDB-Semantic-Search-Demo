@@ -213,16 +213,17 @@ def get(query: str = None, request=None):
             for node in nodes:
 
                 node_content = Div(
-                    P("Retrived Node:"),
+                    P(Strong("Retrieved Node:"), cls=TextT.sm),
                     P(node.node.text[:200]),
-                    P(f"Score: {node.score}", ),
-                    P("Source: ", 
+                    P(Strong("Score:"), f" {node.score}", cls=TextT.sm),
+                    P(Strong("Source:"), " ", 
                       A(
                         node.metadata['url'],
                         href=node.metadata['url'],
                         target='_blank',
                         cls="text-primary"
                       ),
+                      cls=TextT.sm
                     )
                 )
                 card_content.append(node_content)
