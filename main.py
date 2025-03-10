@@ -82,7 +82,8 @@ def search_bar():
         ),
         hx_get="/search/results",
         hx_target="#search-results",
-        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']"
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
+        hx_indicator="#loading"
     )
 
     return Div(search_form, cls='pt-5')
@@ -185,6 +186,7 @@ def get():
             search_bar(),
             cls="container mx-auto p-4"), # Added container for styling
         Div(id="search-results", cls="m-2"),
+        Div(Loading(cls=LoadingT.dots), id="loading", cls="htmx-indicator"),
         cls=ContainerT.lg
     )
 
