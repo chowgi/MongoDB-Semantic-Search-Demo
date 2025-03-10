@@ -53,20 +53,6 @@ index = VectorStoreIndex.from_vector_store(store)
 # create the chat engine
 chat_engine = index.as_query_engine(similarity_top_k=3)
 
-
-def TicketSteps(step):
-    return Steps(
-        LiStep("Initial Planning", data_content="📝",
-               cls=StepT.success if step > 0 else StepT.primary if step == 0 else StepT.neutral),
-        LiStep("Development", data_content="🔎",
-               cls=StepT.success if step > 1 else StepT.primary if step == 1 else StepT.neutral),
-        LiStep("Testing", data_content="⚙️",
-               cls=StepT.success if step > 2 else StepT.primary if step == 2 else StepT.neutral),
-        LiStep("Release", data_content="✅",
-               cls=StepT.success if step > 3 else StepT.primary if step == 3 else StepT.neutral),
-        cls="w-full")
-
-
 ##################################################
 ########## Settings and Admin Logic ##############
 ##################################################
@@ -96,13 +82,10 @@ def search_bar():
         ),
         hx_get="/search/results",
         hx_target="#search-results",
-        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
-        hx_indicator="#search-loading"
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']"
     )
-    
-    loading = Loading(htmx_indicator=True, cls=LoadingT.dots, id="search-loading")
 
-    return Div(search_form, loading, cls='pt-5')
+    return Div(search_form, cls='pt-5')
 
 def search(query, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
@@ -131,32 +114,10 @@ def search(query, top_k=5):
 ##################################################
 
 def create_message_div(role, content):
-    icon = UkIcon("user" if role == "user" else "robot")
-    
-    if role == "user":
-        return Div(
-            DivRAligned(
-                Card(
-                    DivLAligned(icon, Strong("You"), cls="mb-2"),
-                    P(content, cls=TextT.sm),
-                    cls=CardT.primary
-                ),
-                cls="w-3/4"
-            ),
-            cls="mb-4"
-        )
-    else:
-        return Div(
-            DivLAligned(
-                Card(
-                    DivLAligned(icon, Strong("Assistant"), cls="mb-2"),
-                    Div(content, cls=(TextT.sm, "prose")),
-                    cls=CardT.secondary
-                ),
-                cls="w-3/4"
-            ),
-            cls="mb-4"
-        )
+    return Div(
+        Div(role, cls="chat-header"),
+        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 ##################################################
 ################## Agent Logic ###################
@@ -241,59 +202,31 @@ def get(query: str = None, request=None):
     if query:
         results = search(query, top_k=3)
 
-        # Mode descriptions and alert styles
-        mode_info = {
-            "Text Search": {
-                "description": "Uses traditional keyword-based searching to find exact matches in text.",
-                "alert_type": AlertT.info
-            },
-            "Vector Search": {
-                "description": "Uses AI embeddings to find semantically similar content regardless of wording.",
-                "alert_type": AlertT.success 
-            },
-            "Hybrid Search": {
-                "description": "Combines text and vector search for both exact and semantic matches.",
-                "alert_type": AlertT.warning
-            }
-        }
-
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
         for mode_name, nodes in results.items(): 
-            info = mode_info.get(mode_name, {"description": "Search mode", "alert_type": AlertT.info})
-            
-            card_header = Div(
-                H4(mode_name),
-                Alert(info["description"], cls=info["alert_type"]),
-                cls="space-y-2"
-            )
-            
+
+            card_title = H4(f"Mode: {mode_name}")
             card_content = []
-            for i, node in enumerate(nodes):
-                # Format the score as percentage for better readability
-                score_percent = f"{node.score * 100:.1f}%"
-                
-                node_content = Card(
-                    P(node.node.text[:200] + "..."),
-                    DividerSplit(),
-                    DivFullySpaced(
-                        Div(Strong("Relevance: "), score_percent),
-                        Div(
-                            A(
-                                UkIcon("external-link", cls="mr-1"),
-                                "Source",
-                                href=node.metadata['url'],
-                                target='_blank',
-                                cls="text-primary"
-                            )
-                        )
-                    ),
-                    cls=CardT.hover
+            for node in nodes:
+
+                node_content = Div(
+                    P("Retrived Node:"),
+                    P(node.node.text[:200]),
+                    P(f"Score: {node.score}", ),
+                    P("Source: ", 
+                      A(
+                        node.metadata['url'],
+                        href=node.metadata['url'],
+                        target='_blank',
+                        cls="text-primary"
+                      ),
+                    )
                 )
                 card_content.append(node_content)
 
             # Add the completed card with a title and content to the list
-            cards.append(Card(card_header, *card_content))
+            cards.append(Card(card_title, *card_content))
 
         grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
 
@@ -307,143 +240,42 @@ def get():
     return Container(
         navbar(),
         Card(
-            H3("RAG Chat with MongoDB Atlas & Voyage AI", cls="text-center mb-4"),
-            Alert(
-                DivLAligned(UkIcon("info"), Span("This chat uses MongoDB Atlas and Voyage AI to retrieve and summarize relevant information based on your questions.")),
-                cls=(AlertT.info, "mb-4")
-            ),
             Div(id="chat-messages", 
-                cls="space-y-4 overflow-y-auto p-4 rounded-lg bg-gray-50",
-                style="height:400px; overflow: auto"
-            ),
+                cls="space-y-4 h-[60vh] overflow-y-auto p-4",
+                style="height:300px; overflow: auto"
+               ),
             Form(
-                TextArea(id="message", placeholder="Ask a question about the website content...", cls="w-full"),
-                DivRAligned(
-                    Button(
-                        DivLAligned(UkIcon("send"), "Send"),
-                        cls=ButtonT.primary,
-                        hx_post="/send-message",
-                        hx_target="#chat-messages",
-                        hx_swap="beforeend scroll:#chat-messages:bottom",
-                        hx_indicator="#rag-loading"
-                    )
+                TextArea(id="message", placeholder="Type your message..."),
+                Button(
+                    "Send",
+                    cls=ButtonT.primary,
+                    hx_post="/send-message",
+                    hx_target="#chat-messages",
+                    hx_swap="beforeend scroll:#chat-messages:bottom"
                 ),
                 cls="space-y-2",
                 hx_trigger="keydown[key=='Enter' && !shiftKey]",
                 hx_post="/send-message",
                 hx_target="#chat-messages",
-                hx_swap="beforeend scroll:#chat-messages:bottom",
-                hx_indicator="#rag-loading"
-            ),
-            Loading(htmx_indicator=True, type=LoadingT.dots, cls="fixed top-0 right-0 m-4", id="rag-loading"),
-            cls=(CardT.hover, "shadow-lg")
-        ),
-        cls=ContainerT.lg
+                hx_swap="beforeend scroll:#chat-messages:bottom"
+            )
+        ),cls=ContainerT.lg
     )
 
 @rt("/agents")
 def get():
     return Container(
         navbar(),
-        Card(
-            H3("AI Agents (Coming Soon)", cls="mb-4"),
-            Alert(
-                DivLAligned(UkIcon("code"), Span("This feature is under development")),
-                cls=(AlertT.warning, "mb-4")
-            ),
-            Grid(
-                Card(
-                    Img(src="/ai_icon.png", alt="Data Analysis Agent", style="height:100px; object-fit:contain; margin:auto;"),
-                    H4("Data Analysis Agent"),
-                    P("Process and analyze your MongoDB data with natural language requests"),
-                    Button("Try Demo", cls=ButtonT.primary, disabled=True),
-                    cls=CardT.hover
-                ),
-                Card(
-                    Img(src="/ai_icon.png", alt="Research Assistant", style="height:100px; object-fit:contain; margin:auto;"),
-                    H4("Research Assistant"),
-                    P("Automatically collect and synthesize information from your knowledge base"),
-                    Button("Try Demo", cls=ButtonT.primary, disabled=True),
-                    cls=CardT.hover
-                ),
-                Card(
-                    Img(src="/ai_icon.png", alt="Workflow Automation", style="height:100px; object-fit:contain; margin:auto;"),
-                    H4("Workflow Automation"),
-                    P("Create and execute multi-step workflows with MongoDB integrations"),
-                    Button("Try Demo", cls=ButtonT.primary, disabled=True),
-                    cls=CardT.hover
-                ),
-                cols_lg=3,
-                cls="gap-4"
-            ),
-            DividerSplit("Feature Roadmap"),
-            TicketSteps(1),
-            cls=(CardT.hover, "shadow-lg")
-        ),
-        cls=ContainerT.lg
+        P("Agent demo coming soon! Maybe..."),
+        cls=ContainerT.sm
     )
 
 @rt("/settings")
 def get():
     return Container(
         navbar(),
-        Card(
-            H3("MongoDB Atlas Settings", cls="mb-4"),
-            Form(
-                LabelInput("MongoDB URI", id="mongodb_uri", type="password", value=mongodb_uri if mongodb_uri else "", placeholder="mongodb+srv://..."),
-                LabelInput("Database Name", id="db_name", value=db_name if db_name else "", placeholder="your_database_name"),
-                LabelInput("Collection Name", id="collection_name", value="embeddings", placeholder="embeddings"),
-
-@rt("/update-settings")
-def post(mongodb_uri: str = None, db_name: str = None, collection_name: str = None, 
-         voyage_api_key: str = None, embedding_model: str = None, website_url: str = None):
-    # In a production app, you would update environment variables or a configuration file
-    # For this demo, we'll just return a success message
-    
-    return Alert(
-        DivLAligned(UkIcon("check"), Span("Settings updated successfully!")),
-        cls=(AlertT.success, "mb-4"),
-        hx_swap_oob="true"
-    )
-
-@rt("/reset-vector-store")
-def post():
-    # In a production app, this would delete the MongoDB collection and recreate it
-    try:
-        # Simulate database reset with a delay
-        import time
-        time.sleep(2)
-        
-        return Alert(
-            DivLAligned(UkIcon("check"), Span("Vector store reset successfully!")),
-            cls=(AlertT.success, "mb-4"),
-            hx_swap_oob="true"
-        )
-    except Exception as e:
-        return Alert(
-            DivLAligned(UkIcon("warning"), Span(f"Error: {str(e)}")),
-            cls=(AlertT.error, "mb-4"),
-            hx_swap_oob="true"
-        )
-
-                LabelInput("Voyage AI API Key", id="voyage_api_key", type="password", value=voyage_api_key if voyage_api_key else "", placeholder="Enter your Voyage AI API key"),
-                H4("Indexing Settings", cls="mt-6 mb-2"),
-                Grid(
-                    LabelInput("Website URL", id="website_url", value=website_url if website_url else "", placeholder="https://example.com/sitemap.xml"),
-                    LabelInput("Batch Size", id="batch_size", type="number", value="20", placeholder="20"),
-                    LabelSelect(*Options("Embedding Model", "voyage-2", "voyage-3", selected_idx=2), label="Embedding Model", id="embedding_model"),
-                    LabelInput("Scrape Limit", id="scrape_limit", type="number", value="100", placeholder="100 (0 for all)"),
-                    cols=2
-                ),
-                DividerSplit(),
-                DivRAligned(
-                    Button("Save Settings", cls=ButtonT.primary, hx_post="/update-settings", hx_swap="outerHTML"),
-                    Button("Reset Vector Store", cls=(ButtonT.destructive, "ml-2"), hx_post="/reset-vector-store", hx_confirm="This will delete all embeddings. Are you sure?", hx_swap="none")
-                ),
-                cls="space-y-4"
-            )
-        ),
-        cls=ContainerT.lg
+        P("Settings coming soon! Maybe..."),
+        cls=ContainerT.sm
     )
 
 @rt("/send-message")
