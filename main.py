@@ -242,7 +242,7 @@ def get():
     return Container(
         navbar(),
         Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
-            P("Talk to your own doc's or website", cls="pb-5 text-center uk-text-lead"),
+            P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
         Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
