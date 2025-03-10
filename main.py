@@ -68,12 +68,11 @@ def search_bar():
                          name="query",
                          placeholder="Search documents...",
                          cls="search-bar",
-                         id="search-input",
-                         hx_get="/search/start",  # Directing to the new start_search route
-                         hx_trigger="submit, keyup[key=='Enter']")
+                         id="search-input")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
                           type="submit")
+
     search_form = Form(
         Grid(
             Div(search_input, cls="col-span-5"),
@@ -81,8 +80,11 @@ def search_bar():
             cols=6,
             cls="items-center gap-2"
         ),
-        hx_target="#search-results"
+        hx_get="/search/results",
+        hx_target="#search-results",
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']"
     )
+
     return Div(search_form, cls='pt-5')
 
 def search(query, top_k=5):
@@ -186,19 +188,9 @@ def get():
         cls=ContainerT.lg
     )
 
-@rt("/search/start")
-def start_search(query: str):
-    """Show loading spinner while fetching search results."""
-    loading_indicator = Div(
-        Loading(), 
-        id="loading",
-        hx_get=f"/search/results?query={query}"
-    )
-    # Initiate the search without returning results yet
-    return loading_indicator
 
 @rt("/search/results")
-def get_results(query: str = None, request=None):
+def get(query: str = None, request=None):
     
     clear_search_bar = Input(type="search",
          name="query",
@@ -208,15 +200,18 @@ def get_results(query: str = None, request=None):
          hx_swap_oob="true")
     
     if query:
-        results = search(query, top_k=5)
+        results = search(query, top_k=3)
+
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
         for mode_name, nodes in results.items(): 
+
             card_title = H4(f"Mode: {mode_name}")
             card_content = []
             for node in nodes:
+
                 node_content = Div(
-                    P("Retrieved Node:"),
+                    P("Retrived Node:"),
                     P(node.node.text[:200]),
                     P(f"Score: {node.score}", ),
                     P("Source: ", 
@@ -229,12 +224,16 @@ def get_results(query: str = None, request=None):
                     )
                 )
                 card_content.append(node_content)
+
             # Add the completed card with a title and content to the list
             cards.append(Card(card_title, *card_content))
+
         grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
+
         return clear_search_bar, grid
     else:
         return P("Please enter a search query.")
+
 
 @rt("/rag")
 def get():
