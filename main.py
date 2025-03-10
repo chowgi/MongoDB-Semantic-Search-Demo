@@ -241,10 +241,12 @@ def get(query: str = None, request=None):
 def get():
     return Container(
         navbar(),
+        Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
+            P("Talk to your own doc's or website", cls="pb-5 text-center uk-text-lead"),
         Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
-                style="height:300px; overflow: auto"
+                style="overflow: auto"
                ),
             Form(
                 TextArea(id="message", placeholder="Type your message..."),
@@ -287,7 +289,7 @@ def post(message: str):
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
         Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
-    ),Div(Loading(), id="loading")
+    ),Div(Loading(cls=LoadingT.dots), id="loading")
 
 @rt("/get-response")
 def post(message: str):
