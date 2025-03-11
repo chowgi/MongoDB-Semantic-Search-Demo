@@ -12,3 +12,4 @@ pymongo
 python-fasthtml
 MonsterUI
 gpt-index
+edx-search
