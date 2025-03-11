@@ -99,10 +99,23 @@ def scrape_and_store_sitemap(website_url: str, storage_context: StorageContext, 
 
 if __name__ == "__main__":
     from llama_index.core import StorageContext
-    from main import store, mongodb_client, DB_NAME, website_url
+    import os
+    from search import init_search
+    
+    # Initialize search components
+    mongodb_uri = os.environ['MONGODB_URI']
+    voyage_api_key = os.environ['VOYAGE_API_KEY']
+    openai_api_key = os.environ['OPENAI_API_KEY']
+    website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
+    
+    search_components = init_search(
+        mongodb_uri=mongodb_uri,
+        voyage_api_key=voyage_api_key,
+        openai_api_key=openai_api_key
+    )
     
     # Set up the storage context with the MongoDB vector store
-    storage_context = StorageContext.from_defaults(vector_store=store)
+    storage_context = StorageContext.from_defaults(vector_store=search_components["store"])
     
     # Scrape and store content from the website
     scrape_and_store_sitemap(

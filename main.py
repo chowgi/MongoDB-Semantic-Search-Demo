@@ -1,13 +1,7 @@
 from fasthtml.common import *
-from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
-from llama_index.core import VectorStoreIndex, StorageContext, Settings
-from llama_index.embeddings.voyageai import VoyageEmbedding
-from llama_index.llms.openai import OpenAI
-from llama_index.core import VectorStoreIndex, StorageContext
-from llama_index.llms.openai import OpenAI
 from monsterui.all import *
-import pymongo
 import os
+from search import init_search, search
 
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
@@ -18,40 +12,21 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
-db_name = "hawthornfc"
 
-# Configure the default Language Model with OpenAI's API
-Settings.llm = OpenAI(
-    temperature=0.7, model="gpt-3.5-turbo", api_key=openai_api_key
-)
-
-# Set the default embedding model using VoyageAI Embedding
-Settings.embed_model = VoyageEmbedding(
+# Initialize search components
+search_components = init_search(
+    mongodb_uri=mongodb_uri,
     voyage_api_key=voyage_api_key,
-    model_name="voyage-3",
+    openai_api_key=openai_api_key
 )
 
-# Establish MongoDB client connection using the provided URI
-mongodb_client = pymongo.MongoClient(mongodb_uri)
-
-# Set up MongoDB Atlas Vector Search connection with specified database and collection
-store = MongoDBAtlasVectorSearch(
-    mongodb_client, 
-    db_name=db_name, 
-    collection_name='embeddings', #<--- do I need this?
-    embedding_key="embedding",
-    text_key="text",
-    fulltext_index_name="text_index",
-)
-
-# Initialize the storage context for vector store operations
-storage_context = StorageContext.from_defaults(vector_store=store)
-
-# Generate the vector index from the existing vector store
-index = VectorStoreIndex.from_vector_store(store)
-
-# create the chat engine
-chat_engine = index.as_query_engine(similarity_top_k=3)
+# Extract components for use in the app
+mongodb_client = search_components["mongodb_client"]
+store = search_components["store"]
+storage_context = search_components["storage_context"]
+index = search_components["index"]
+chat_engine = search_components["chat_engine"]
+db_name = search_components["db_name"]
 
 ##################################################
 ########## Settings and Admin Logic ##############
@@ -88,27 +63,7 @@ def search_bar():
 
     return Div(search_form, cls='pt-5')
 
-def search(query, top_k=5):
-    modes = ["text_search", "default", "hybrid"]  # default is vector
-    results = {}  # Initialize results as an empty dictionary
-
-    for mode in modes:
-        # Create a retriever with the specific mode
-        retriever = index.as_retriever(
-            similarity_top_k=top_k,
-            vector_store_query_mode=mode
-        )
-
-        # Retrieve nodes using the current mode
-        retrieved_nodes = retriever.retrieve(query)
-
-        # Map modes to titles for clarity
-        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
-
-        # Store the retrieved nodes in the results dictionary using mode_name as key
-        results[mode_name] = retrieved_nodes
-
-    return results  
+# Search function is now imported from search.py  
 
 ##################################################
 ################## RAG Logic #####################
@@ -202,7 +157,8 @@ def get(query: str = None, request=None):
          hx_swap_oob="true")
     
     if query:
-        results = search(query, top_k=3)
+        # Use the imported search function from search.py
+        results = search(query, index, top_k=3)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
