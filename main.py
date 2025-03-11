@@ -39,12 +39,10 @@ mongodb_client = pymongo.MongoClient(mongodb_uri)
 store = MongoDBAtlasVectorSearch(
     mongodb_client, 
     db_name=DB_NAME, 
-    collection_name=COLLECTION_NAME,
+    collection_name=COLLECTION_NAME, #<--- do I need this?
     embedding_key="embedding",
     text_key="fullplot",
     fulltext_index_name="text_index",
-    metadata_key="metadata",
-    insert_metadata_if_missing=True  # This creates an empty metadata field if missing
 )
 
 # Initialize the storage context for vector store operations
