@@ -110,6 +110,11 @@ def get_user_input():
     # Get sitemap URL
     sitemap_url = input("Enter the sitemap URL to scrape (e.g., https://example.com/sitemap.xml): ")
 
+    # Get database name
+    db_name = input("Enter the MongoDB database name (default 'bendigo'): ")
+    if not db_name:
+        db_name = "bendigo"
+        
     # Get collection name
     collection_name = input("Enter the MongoDB collection name to store embeddings (default 'embeddings'): ")
     if not collection_name:
@@ -137,7 +142,7 @@ def get_user_input():
         except ValueError:
             print("Please enter a valid number for limit.")
 
-    return sitemap_url, collection_name, batch_size, limit
+    return sitemap_url, db_name, collection_name, batch_size, limit
 
 if __name__ == "__main__":
     # Check for required environment variables
@@ -150,14 +155,14 @@ if __name__ == "__main__":
         exit(1)
 
     # Get user input interactively
-    sitemap_url, collection_name, batch_size, limit = get_user_input()
+    sitemap_url, db_name, collection_name, batch_size, limit = get_user_input()
 
     # Initialize required components
     mongodb_uri = os.environ['MONGODB_URI']
     voyage_api_key = os.environ['VOYAGE_API_KEY']
     openai_api_key = os.environ['OPENAI_API_KEY']
 
-    print(f"\nInitializing with collection name: {collection_name}")
+    print(f"\nInitializing with database: {db_name}, collection: {collection_name}")
     print(f"Connecting to MongoDB...")
 
     # Configure the default Language Model with OpenAI's API
@@ -176,6 +181,7 @@ if __name__ == "__main__":
         mongodb_uri=mongodb_uri,
         voyage_api_key=voyage_api_key,
         openai_api_key=openai_api_key,
+        db_name=db_name,
         collection_name=collection_name
     )
 
