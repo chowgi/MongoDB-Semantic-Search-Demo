@@ -18,7 +18,7 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
-db_name = "bendigo"
+db_name = "hawthornfc"
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
