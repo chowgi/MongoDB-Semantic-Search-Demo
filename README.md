@@ -1,73 +1,39 @@
+# MongoDB + Voyage AI Demo
 
-# FastHTML MongoDB Template
+This project demonstrates MongoDB + Voyage AI integration with two standalone FastHTML applications:
 
-A template for building web applications using FastHTML and MongoDB, with MonsterUI for styling.
+1. **Search Application** - Compare Text, Vector, and Hybrid Search Methods
+2. **RAG Application** - Retrieval Augmented Generation chat interface
 
-## Features
+## Environment Variables Required
 
-- FastHTML for server-side rendering and hypermedia-driven interfaces
-- MongoDB integration with automatic connection handling
-- MonsterUI components and theming for beautiful UI
-- Static file serving from public directory
-- Environment variable support through Replit Secrets
-- Debug mode enabled for development
-- Automatic error handling for database connections
+Set the following environment variables before running the applications:
 
-## Getting Started
+- `OPENAI_API_KEY` - OpenAI API key
+- `MONGODB_URI` - MongoDB Atlas connection string
+- `VOYAGE_API_KEY` - Voyage AI API key
 
-1. Set up your MongoDB connection string in the Replit Secrets tab:
-   - Add `MONGO_URI` with your MongoDB connection string
+## Running the Applications
 
-2. Run the application using the Run button - it will be available on port 5001
+### Search Application
 
-## Project Structure
+Run the search application on port 3030:
 
-```
-├── public/              # Public assets directory
-├── main.py             # Main application file 
-└── pyproject.toml      # Project dependencies
+```bash
+python search_app.py
 ```
 
-## Dependencies
+### RAG Application
 
-- python-fasthtml
-- pymongo
-- python-dotenv
-- bson
-- monsterui
+Run the RAG application on port 3000:
 
-## Template Features
-
-The template provides:
-
-- Configured MongoDB connection with error handling
-- FastHTML setup with MonsterUI theme integration
-- Public file serving 
-- Environment variable management
-- Basic homepage with MonsterUI Card component
-
-## Development
-
-To extend the application:
-
-1. Edit `main.py` to add your routes and logic
-2. Add public assets to the `public` directory
-3. Use MonsterUI components for styling by importing from `monsterui.all`
-
-## Example Route
-
-```python
-@rt("/")
-def home():
-    return Titled("Your App",
-        Card(
-            H1("Welcome!"),
-            P("Start building with FastHTML and MongoDB")))
+```bash
+python rag_app.py
 ```
 
-## Environment Variables
+## Tools and Libraries Used
 
-Required environment variable:
-- `MONGO_URI`: Your MongoDB connection string
-
-Set this in the Secrets tab of your Repl.
+- FastHTML - Server and UI framework
+- MongoDB Atlas - Database and vector storage
+- Voyage AI - Embeddings generation
+- OpenAI - Language model integration
