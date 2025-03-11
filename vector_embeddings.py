@@ -86,10 +86,13 @@ def create_vector_embeddings(
         try:
             embedding = Settings.embed_model.get_text_embedding(text_content)
             
-            # Update document with embedding
+            # Update document with embedding and ensure metadata field exists
             collection.update_one(
                 {"_id": doc["_id"]},
-                {"$set": {"embedding": embedding}}
+                {"$set": {
+                    "embedding": embedding,
+                    "metadata": doc.get("metadata", {"url": doc.get("url", ""), "source": "mongodb"})
+                }}
             )
             
             processed += 1

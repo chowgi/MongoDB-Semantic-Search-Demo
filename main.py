@@ -100,14 +100,19 @@ def search(query, top_k=5):
             vector_store_query_mode=mode
         )
 
-        # Retrieve nodes using the current mode
-        retrieved_nodes = retriever.retrieve(query)
+        try:
+            # Retrieve nodes using the current mode
+            retrieved_nodes = retriever.retrieve(query)
 
-        # Map modes to titles for clarity
-        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
+            # Map modes to titles for clarity
+            mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
 
-        # Store the retrieved nodes in the results dictionary using mode_name as key
-        results[mode_name] = retrieved_nodes
+            # Store the retrieved nodes in the results dictionary using mode_name as key
+            results[mode_name] = retrieved_nodes
+        except Exception as e:
+            # Log the error but continue with other modes
+            print(f"Error with {mode} mode: {str(e)}")
+            results[f"{mode} (Error)"] = []
 
     return results  
 
