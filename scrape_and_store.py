@@ -4,7 +4,7 @@ from trafilatura.sitemaps import sitemap_search
 from llama_index.core import VectorStoreIndex, StorageContext
 import os
 
-def scrape_and_store_sitemap(website_url: str, storage_context: StorageContext, batch_size: int = 5, limit: int = None):
+def scrape_and_store_sitemap(website_url: str, storage_context: StorageContext, batch_size: int = 5, limit: int = None, collection_name: str = "embeddings"):
     """
     Scrape content from a website's sitemap and store it in a vector store.
     
@@ -13,6 +13,7 @@ def scrape_and_store_sitemap(website_url: str, storage_context: StorageContext, 
         storage_context: Storage context for the vector store
         batch_size: Number of documents to process before storing
         limit: Maximum number of links to process (None for all)
+        collection_name: Name of the MongoDB collection to store embeddings in
     """
     # Get links from the sitemap
     all_links = sitemap_search(website_url)
@@ -106,11 +107,13 @@ if __name__ == "__main__":
     voyage_api_key = os.environ['VOYAGE_API_KEY']
     openai_api_key = os.environ['OPENAI_API_KEY']
     website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
+    collection_name = os.environ.get('COLLECTION_NAME', 'embeddings')  # Use environment variable or default
     
     search_components = init_search(
         mongodb_uri=mongodb_uri,
         voyage_api_key=voyage_api_key,
-        openai_api_key=openai_api_key
+        openai_api_key=openai_api_key,
+        collection_name=collection_name
     )
     
     # Set up the storage context with the MongoDB vector store
@@ -121,5 +124,6 @@ if __name__ == "__main__":
         website_url=website_url,
         storage_context=storage_context,
         batch_size=10,
-        limit=20  # Set to 0 for no limit
+        limit=20,  # Set to 0 for no limit
+        collection_name=collection_name
     )
