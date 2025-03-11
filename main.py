@@ -41,7 +41,7 @@ store = MongoDBAtlasVectorSearch(
     db_name=DB_NAME, 
     collection_name=COLLECTION_NAME, #<--- do I need this?
     embedding_key="embedding",
-    text_key="text",
+    text_key="fullplot",
     fulltext_index_name="text_index",
 )
 
