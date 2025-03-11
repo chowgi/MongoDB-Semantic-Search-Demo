@@ -2,6 +2,7 @@ from fasthtml.common import *
 from monsterui.all import *
 import os
 from search import init_search, search
+from rag import init_rag, create_message_div, handle_chat_message
 
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
@@ -25,8 +26,11 @@ mongodb_client = search_components["mongodb_client"]
 store = search_components["store"]
 storage_context = search_components["storage_context"]
 index = search_components["index"]
-chat_engine = search_components["chat_engine"]
 db_name = search_components["db_name"]
+
+# Initialize RAG components
+rag_components = init_rag(index)
+chat_engine = rag_components["chat_engine"]
 
 ##################################################
 ########## Settings and Admin Logic ##############
@@ -68,12 +72,6 @@ def search_bar():
 ##################################################
 ################## RAG Logic #####################
 ##################################################
-
-def create_message_div(role, content):
-    return Div(
-        Div(role, cls="chat-header"),
-        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
-        cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 ##################################################
 ################## Agent Logic ###################
@@ -249,8 +247,8 @@ def post(message: str):
 
 @rt("/get-response")
 def post(message: str):
-
-    ai_response = chat_engine.query(message)
+    # Use the RAG module to handle the chat message
+    ai_response = handle_chat_message(chat_engine, message)
 
     return (
         create_message_div("assistant", ai_response),
