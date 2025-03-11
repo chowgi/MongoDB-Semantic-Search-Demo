@@ -1,8 +1,13 @@
 from fasthtml.common import *
+from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
+from llama_index.core import VectorStoreIndex, StorageContext, Settings
+from llama_index.embeddings.voyageai import VoyageEmbedding
+from llama_index.llms.openai import OpenAI
+from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.llms.openai import OpenAI
 from monsterui.all import *
+import pymongo
 import os
-from search import init_search, search
-from rag import init_rag, create_message_div, handle_chat_message
 
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
@@ -13,24 +18,50 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
+db_name = "mongo_voyage_demos"
 
-# Initialize search components
-search_components = init_search(
-    mongodb_uri=mongodb_uri,
-    voyage_api_key=voyage_api_key,
-    openai_api_key=openai_api_key
+# Configure the default Language Model with OpenAI's API
+Settings.llm = OpenAI(
+    temperature=0.7, model="gpt-3.5-turbo", api_key=openai_api_key
 )
 
-# Extract components for use in the app
-mongodb_client = search_components["mongodb_client"]
-store = search_components["store"]
-storage_context = search_components["storage_context"]
-index = search_components["index"]
-db_name = search_components["db_name"]
+# Set the default embedding model using VoyageAI Embedding
+Settings.embed_model = VoyageEmbedding(
+    voyage_api_key=voyage_api_key,
+    model_name="voyage-3",
+)
 
-# Initialize RAG components
-rag_components = init_rag(index)
-chat_engine = rag_components["chat_engine"]
+# Establish MongoDB client connection using the provided URI
+mongodb_client = pymongo.MongoClient(mongodb_uri)
+
+# Set up MongoDB Atlas Vector Search connection with specified database and collection
+store = MongoDBAtlasVectorSearch(
+    mongodb_client, 
+    db_name=db_name, 
+    collection_name='embeddings', #<--- do I need this?
+    embedding_key="embedding",
+    text_key="text",
+    fulltext_index_name="text_index",
+)
+
+# Initialize the storage context for vector store operations
+storage_context = StorageContext.from_defaults(vector_store=store)
+
+# Generate the vector index from the existing vector store
+index = VectorStoreIndex.from_vector_store(store)
+
+# create the chat engine
+chat_engine = index.as_query_engine(similarity_top_k=3)
+
+##################################################
+########## Settings and Admin Logic ##############
+##################################################
+
+
+
+##################################################
+################# Search Logic ###################
+##################################################
 
 def search_bar():
     search_input = Input(type="search",
@@ -56,6 +87,49 @@ def search_bar():
     )
 
     return Div(search_form, cls='pt-5')
+
+def search(query, top_k=5):
+    modes = ["text_search", "default", "hybrid"]  # default is vector
+    results = {}  # Initialize results as an empty dictionary
+
+    for mode in modes:
+        # Create a retriever with the specific mode
+        retriever = index.as_retriever(
+            similarity_top_k=top_k,
+            vector_store_query_mode=mode
+        )
+
+        # Retrieve nodes using the current mode
+        retrieved_nodes = retriever.retrieve(query)
+
+        # Map modes to titles for clarity
+        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
+
+        # Store the retrieved nodes in the results dictionary using mode_name as key
+        results[mode_name] = retrieved_nodes
+
+    return results  
+
+##################################################
+################## RAG Logic #####################
+##################################################
+
+def create_message_div(role, content):
+    return Div(
+        Div(role, cls="chat-header"),
+        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        cls=f"chat chat-{'end' if role == 'user' else 'start'}")
+
+##################################################
+################## Agent Logic ###################
+##################################################
+
+
+
+
+##################################################
+##############  Nav And Home Page ################
+##################################################
 
 def navbar():
     return NavBar(A("Search",href='/search'),
@@ -128,8 +202,7 @@ def get(query: str = None, request=None):
          hx_swap_oob="true")
     
     if query:
-        # Use the imported search function from search.py
-        results = search(query, index, top_k=3)
+        results = search(query, top_k=3)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
@@ -140,16 +213,16 @@ def get(query: str = None, request=None):
             for node in nodes:
 
                 node_content = Div(
-                    P(Strong("Retrieved Node:"), f" {node.node.text[:200]}", cls=TextT.sm),
-                    P(Strong("Score:"), f" {node.score}", cls=TextT.sm),
-                    P(Strong("Source:"), " ", 
+                    P("Retrived Node:"),
+                    P(node.node.text[:200]),
+                    P(f"Score: {node.score}", ),
+                    P("Source: ", 
                       A(
                         node.metadata['url'],
                         href=node.metadata['url'],
                         target='_blank',
                         cls="text-primary"
                       ),
-                      cls=TextT.sm
                     )
                 )
                 card_content.append(node_content)
@@ -220,8 +293,8 @@ def post(message: str):
 
 @rt("/get-response")
 def post(message: str):
-    # Use the RAG module to handle the chat message
-    ai_response = handle_chat_message(chat_engine, message)
+
+    ai_response = chat_engine.query(message)
 
     return (
         create_message_div("assistant", ai_response),
