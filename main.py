@@ -18,8 +18,7 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
-DB_NAME = "sample_mflix"
-COLLECTION_NAME = "movies"
+db_name = "hawthornfc"
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
@@ -38,10 +37,10 @@ mongodb_client = pymongo.MongoClient(mongodb_uri)
 # Set up MongoDB Atlas Vector Search connection with specified database and collection
 store = MongoDBAtlasVectorSearch(
     mongodb_client, 
-    db_name=DB_NAME, 
-    collection_name=COLLECTION_NAME, #<--- do I need this?
+    db_name=db_name, 
+    collection_name='embeddings', #<--- do I need this?
     embedding_key="embedding",
-    text_key="fullplot",
+    text_key="text",
     fulltext_index_name="text_index",
 )
 
@@ -100,19 +99,14 @@ def search(query, top_k=5):
             vector_store_query_mode=mode
         )
 
-        try:
-            # Retrieve nodes using the current mode
-            retrieved_nodes = retriever.retrieve(query)
+        # Retrieve nodes using the current mode
+        retrieved_nodes = retriever.retrieve(query)
 
-            # Map modes to titles for clarity
-            mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
+        # Map modes to titles for clarity
+        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
 
-            # Store the retrieved nodes in the results dictionary using mode_name as key
-            results[mode_name] = retrieved_nodes
-        except Exception as e:
-            # Log the error but continue with other modes
-            print(f"Error with {mode} mode: {str(e)}")
-            results[f"{mode} (Error)"] = []
+        # Store the retrieved nodes in the results dictionary using mode_name as key
+        results[mode_name] = retrieved_nodes
 
     return results  
 
