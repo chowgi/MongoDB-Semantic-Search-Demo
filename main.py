@@ -232,7 +232,8 @@ def get(query: str = None, request=None):
 
         grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
 
-        return clear_search_bar, grid
+        # Return the grid first, then the clear_search_bar to ensure the results stay visible
+        return grid, clear_search_bar
     else:
         return P("Please enter a search query.")
 
