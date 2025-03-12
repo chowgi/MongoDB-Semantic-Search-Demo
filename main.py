@@ -18,7 +18,7 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 website_url = "https://www.hawthornfc.com.au/sitemap/index.xml"
-db_name = "bendigo"
+db_name = "mongo_voyage_demos"
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
@@ -38,7 +38,7 @@ mongodb_client = pymongo.MongoClient(mongodb_uri)
 store = MongoDBAtlasVectorSearch(
     mongodb_client, 
     db_name=db_name, 
-    collection_name='embeddings', #<--- do I need this?
+    collection_name='recipes', #<--- do I need this?
     embedding_key="embedding",
     text_key="text",
     fulltext_index_name="text_index",
