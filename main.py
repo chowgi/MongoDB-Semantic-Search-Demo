@@ -186,7 +186,12 @@ def get():
             search_bar(),
             cls="container mx-auto p-4"), # Added container for styling
         Div(id="search-results", cls="m-2"),
-        Div(Loading(cls=LoadingT.dots), id="loading", cls="htmx-indicator"),
+        Div(
+            Div("Searching: ", Loading(cls=LoadingT.dots), 
+                cls="flex items-center justify-center"),
+            id="loading", 
+            cls="htmx-indicator flex items-center justify-center h-32"
+        ),
         cls=ContainerT.lg
     )
 
