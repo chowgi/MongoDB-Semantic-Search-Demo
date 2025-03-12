@@ -217,10 +217,10 @@ def get(query: str = None, request=None):
             for node in nodes:
 
                 node_content = Div(
-                    P("Title: ", node.metadata['title']),
-                    P("Description: ", node.node.text[:200]),
-                    P(f"Score: {node.score}", ),
-                    P("Source: sample_mflix", 
+                    P(Span("Title: ", cls="text-primary"), node.metadata['title']),
+                    P(Span("Description: ", cls="text-primary"), node.node.text[:200]),
+                    P(Span("Score: ", cls="text-primary"), f"{node.score}"),
+                    P(Span("Source: ", cls="text-primary"), "sample_mflix", 
                       # A(
                       #   node.metadata['url'],
                       #   href=node.metadata['url'],
