@@ -9,6 +9,10 @@ from monsterui.all import *
 import pymongo
 import os
 
+##################################################
+################# Global Settings ################
+##################################################
+
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
 app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title="MongoDB + Voyage AI Demo")
@@ -21,7 +25,7 @@ db_name = "mongo_voyage_demos"
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
-    temperature=0.7, model="gpt-3.5-turbo", api_key=openai_api_key
+    temperature=0.7, model="gpt-4", api_key=openai_api_key
 )
 
 # Set the default embedding model using VoyageAI Embedding
@@ -33,102 +37,9 @@ Settings.embed_model = VoyageEmbedding(
 # Establish MongoDB client connection using the provided URI
 mongodb_client = pymongo.MongoClient(mongodb_uri)
 
-# Set up MongoDB Atlas Vector Search connection with specified database and collection
-store = MongoDBAtlasVectorSearch(
-    mongodb_client, 
-    db_name=db_name, 
-    collection_name='movie_embeddings',
-    embedding_key="embedding",
-    text_key="text",
-    fulltext_index_name="text_index",
-)
-
-# Initialize the storage context for vector store operations
-storage_context = StorageContext.from_defaults(vector_store=store)
-
-# Generate the vector index from the existing vector store
-index = VectorStoreIndex.from_vector_store(store)
-
-# create the chat engine
-chat_engine = index.as_query_engine(similarity_top_k=3)
-
 ##################################################
-########## Settings and Admin Logic ##############
-##################################################
-
-
-
-##################################################
-################# Search Logic ###################
-##################################################
-
-def search_bar():
-    search_input = Input(type="search",
-                         name="query",
-                         placeholder="Search documents...",
-                         cls="search-bar",
-                         id="search-input")
-    search_button = Button("Search", 
-                          cls=ButtonT.primary,
-                          type="submit")
-
-    search_form = Form(
-        Grid(
-            Div(search_input, cls="col-span-5"),
-            Div(search_button, cls="col-span-1"),
-            cols=6,
-            cls="items-center gap-2"
-        ),
-        hx_get="/search/results",
-        hx_target="#search-results",
-        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
-        hx_indicator="#loading"
-    )
-
-    return Div(search_form, cls='pt-5')
-
-def search(query, top_k=5):
-    modes = ["text_search", "default", "hybrid"]  # default is vector
-    results = {}  # Initialize results as an empty dictionary
-
-    for mode in modes:
-        # Create a retriever with the specific mode
-        retriever = index.as_retriever(
-            similarity_top_k=top_k,
-            vector_store_query_mode=mode
-        )
-
-        # Retrieve nodes using the current mode
-        retrieved_nodes = retriever.retrieve(query)
-
-        # Map modes to titles for clarity
-        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
-
-        # Store the retrieved nodes in the results dictionary using mode_name as key
-        results[mode_name] = retrieved_nodes
-
-    return results  
-
-##################################################
-################## RAG Logic #####################
-##################################################
-
-def create_message_div(role, content):
-    return Div(
-        Div(role, cls="chat-header"),
-        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
-        cls=f"chat chat-{'end' if role == 'user' else 'start'}")
-
-##################################################
-################## Agent Logic ###################
-##################################################
-
-
-
-
-##################################################
-##############  Nav And Home Page ################
-##################################################
+################  Landing Page ###################
+##################################################f
 
 def navbar():
     return NavBar(A("Search",href='/search'),
@@ -161,10 +72,6 @@ def use_case_cards():
 
     return Grid(*product_cards, cols_lg=3,cls='pt-20 gap-4')
 
-##################################################
-###################  Routes ######################
-##################################################
-
 @rt("/")
 def get():
     return Title("MongoDB + Voyage AI Demos"), Container(
@@ -173,6 +80,74 @@ def get():
         cls=ContainerT.lg
     )
 
+##################################################
+#################### Search ######################
+##################################################
+
+# Set up MongoDB Atlas Vector Search connection with specified database and collection
+search_store = MongoDBAtlasVectorSearch(
+    mongodb_client, 
+    db_name=db_name, 
+    collection_name='movie_embeddings',
+    embedding_key="embedding",
+    text_key="text",
+    fulltext_index_name="text_index",
+)
+
+# # Initialize the storage context for vector store operations
+# search_storage_context = StorageContext.from_defaults(vector_store=search_store)
+
+# Generate the vector index from the existing vector store
+search_index = VectorStoreIndex.from_vector_store(search_store)
+
+# Build the search bar
+def search_bar():
+    search_input = Input(type="search",
+                         name="query",
+                         placeholder="Search documents...",
+                         cls="search-bar",
+                         id="search-input")
+    search_button = Button("Search", 
+                          cls=ButtonT.primary,
+                          type="submit")
+
+    search_form = Form(
+        Grid(
+            Div(search_input, cls="col-span-5"),
+            Div(search_button, cls="col-span-1"),
+            cols=6,
+            cls="items-center gap-2"
+        ),
+        hx_get="/search/results",
+        hx_target="#search-results",
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
+        hx_indicator="#loading"
+    )
+
+    return Div(search_form, cls='pt-5')
+
+def search(query, top_k=5):
+    modes = ["text_search", "default", "hybrid"]  # default is vector
+    results = {}  # Initialize results as an empty dictionary
+
+    for mode in modes:
+        # Create a retriever with the specific mode
+        retriever = search_index.as_retriever(
+            similarity_top_k=top_k,
+            vector_store_query_mode=mode
+        )
+
+        # Retrieve nodes using the current mode
+        retrieved_nodes = retriever.retrieve(query)
+
+        # Map modes to titles for clarity
+        mode_name = "Text Search" if mode == "text_search" else ("Vector Search" if mode == "default" else "Hybrid Search")
+
+        # Store the retrieved nodes in the results dictionary using mode_name as key
+        results[mode_name] = retrieved_nodes
+
+    return results  
+
 @rt("/search")
 def get():
     """Main search page that displays the search form and empty results container"""
@@ -180,7 +155,7 @@ def get():
 
     return Title("Search - MongoDB + Voyage AI"), Container(
         navbar(),
-        Div(H2("MongoDB Atlas Search Comparison", cls="pb-10 text-center"),
+        Div(H2("Movie Search", cls="pb-10 text-center"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
             cls="container mx-auto p-4"), # Added container for styling
@@ -197,14 +172,14 @@ def get():
 
 @rt("/search/results")
 def get(query: str = None, request=None):
-    
+
     clear_search_bar = Input(type="search",
          name="query",
          placeholder="Search documents...",
          cls="search-bar",
          id="search-input",
          hx_swap_oob="true")
-    
+
     if query:
         results = search(query, top_k=3)
 
@@ -217,10 +192,10 @@ def get(query: str = None, request=None):
             for node in nodes:
 
                 node_content = Div(
-                    P(Span("Title: ", cls="text-primary"), node.metadata['title']),
-                    P(Span("Description: ", cls="text-primary"), node.node.text[:200]),
+                    P(Span("Title: ", cls="font-bold"), node.metadata['title']),
+                    P(Span("Retrived Node: ", cls="text-primary"), node.node.text[:200]),
                     P(Span("Score: ", cls="text-primary"), f"{node.score}"),
-                    P(Span("Source: ", cls="text-primary"), "sample_mflix", 
+                    P(Span("Source: ", cls="text-primary"), "mflix_movies",
                       # A(
                       #   node.metadata['url'],
                       #   href=node.metadata['url'],
@@ -241,6 +216,38 @@ def get(query: str = None, request=None):
     else:
         return P("Please enter a search query.")
 
+
+##################################################
+####################### RAG ######################
+##################################################
+
+rag_collection_name = 'bendigo_embeddings'
+
+# Set up MongoDB Atlas Vector Search connection with specified database and collection
+rag_store = MongoDBAtlasVectorSearch(
+    mongodb_client, 
+    db_name=db_name, 
+    collection_name=rag_collection_name,
+    embedding_key="embedding",
+    text_key="text",
+    fulltext_index_name="text_index",
+)
+
+## Initialize the storage context for vector store operations
+#rag_storage_context = StorageContext.from_defaults(vector_store=search_store)
+
+# Generate the vector index from the existing vector store
+rag_index = VectorStoreIndex.from_vector_store(rag_store)
+
+# 
+#chat_engine = index.(similarity_top_k=3)
+chat_engine = rag_index.as_chat_engine(chat_mode="best", verbose=True)
+
+def create_message_div(role, content):
+    return Div(
+        Div(role, cls="chat-header"),
+        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 @rt("/rag")
 def get():
@@ -271,22 +278,6 @@ def get():
         ),cls=ContainerT.lg
     )
 
-@rt("/agents")
-def get():
-    return Container(
-        navbar(),
-        P("Agent demo coming soon! Maybe..."),
-        cls=ContainerT.sm
-    )
-
-@rt("/settings")
-def get():
-    return Container(
-        navbar(),
-        P("Settings coming soon! Maybe..."),
-        cls=ContainerT.sm
-    )
-
 @rt("/send-message")
 def post(message: str):
     return (
@@ -299,11 +290,37 @@ def post(message: str):
 @rt("/get-response")
 def post(message: str):
 
-    ai_response = chat_engine.query(message)
+    ai_response = chat_engine.chat(message)
 
     return (
         create_message_div("assistant", ai_response),
         Div(id="loading", hx_swap_oob="true"))
 
 
+
+##################################################
+#################### Agents ######################
+##################################################
+
+@rt("/agents")
+def get():
+    return Container(
+        navbar(),
+        P("Agent demo coming soon! Maybe..."),
+        cls=ContainerT.sm
+    )
+
+#################################################
+################## Settings ######################
+##################################################
+
+@rt("/settings")
+def get():
+    return Container(
+        navbar(),
+        P("Settings coming soon! Maybe..."),
+        cls=ContainerT.sm
+    )
+
+# Seart the App
 serve()
