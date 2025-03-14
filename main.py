@@ -116,6 +116,7 @@ def search_bar():
                    cls="text-sm hover:bg-green-500 rounded mb-2 mr-2",
                    hx_get=f"/search/results?query={suggestion}",
                    hx_target="#search-results",
+                   hx_swap="innerHTML",
                    hx_indicator="#loading")
         )
     
@@ -144,6 +145,7 @@ def search_bar():
         ),
         hx_get="/search/results",
         hx_target="#search-results",
+        hx_swap="innerHTML",
         hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
         hx_indicator="#loading"
     )
