@@ -113,7 +113,7 @@ def search_bar():
     for suggestion in suggestions:
         suggestion_buttons.append(
             Button(suggestion,
-                   cls="text-sm hover:bg-gray-100 py-1 px-2 rounded mb-2 mr-2",
+                   cls="text-sm hover:bg-green-500 rounded mb-2 mr-2",
                    hx_get=f"/search/results?query={suggestion}",
                    hx_target="#search-results",
                    hx_indicator="#loading")
@@ -185,7 +185,7 @@ def get():
             cls="container mx-auto p-4"), # Added container for styling
         Div(id="search-results", cls="m-2"),
         Div(
-            Div("Searching: ", Loading(cls=LoadingT.dots), 
+            Div(Loading(cls=LoadingT.dots), 
                 cls="flex items-center justify-center"),
             id="loading", 
             cls="htmx-indicator flex items-center justify-center h-32"
@@ -205,7 +205,7 @@ def get(query: str = None, request=None):
          hx_swap_oob="true")
 
     if query:
-        results = search(query, top_k=3)
+        results = search(query, top_k=5)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
@@ -216,18 +216,10 @@ def get(query: str = None, request=None):
             for node in nodes:
 
                 node_content = Div(
-                    P(Span("Title: ", cls="font-bold"), node.metadata['title']),
-                    P(Span("Retrived Node: ", cls="text-primary"), node.node.text[:200]),
+                    P(Span("Title: ", cls="text-primary"), node.metadata['title']),
+                    P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score}"),
-                    P(Span("Source: ", cls="text-primary"), "mflix_movies",
-                      # A(
-                      #   node.metadata['url'],
-                      #   href=node.metadata['url'],
-                      #   target='_blank',
-                      #   cls="text-primary"
-                      # ),
                     )
-                )
                 card_content.append(node_content)
 
             # Add the completed card with a title and content to the list
