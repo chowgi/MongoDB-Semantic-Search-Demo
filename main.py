@@ -175,20 +175,18 @@ def search(query, top_k=5):
 @rt("/search")
 def get():
     """Main search page that displays the search form and empty results container"""
-    search_results = Div(id="search-results", cls="m-2")
-
     return Title("Search - MongoDB + Voyage AI"), Container(
         navbar(),
         Div(H2("Movie Search", cls="pb-10 text-center"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
-            cls="container mx-auto p-4"), # Added container for styling
-        Div(id="search-results", cls="m-2"),
+            cls="container mx-auto p-4"),
         Div(
+            Div(id="search-results", cls="m-2"),
             Div(Loading(cls=LoadingT.dots), 
-                cls="flex items-center justify-center"),
-            id="loading", 
-            cls="htmx-indicator flex items-center justify-center h-32"
+                cls="flex items-center justify-center h-32"),
+            id="loading",
+            hx_swap_oob="true"
         ),
         cls=ContainerT.lg
     )
