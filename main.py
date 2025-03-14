@@ -102,6 +102,30 @@ search_index = VectorStoreIndex.from_vector_store(search_store)
 
 # Build the search bar
 def search_bar():
+    # Create search suggestion buttons
+    suggestions = [
+        "Action movies about humans fighting machines",
+        "Sci-fi films with space exploration themes",
+        "Crime thrillers with unexpected plot twists"
+    ]
+    
+    suggestion_buttons = []
+    for suggestion in suggestions:
+        suggestion_buttons.append(
+            Button(suggestion,
+                   cls="text-sm hover:bg-gray-100 py-1 px-2 rounded mb-2 mr-2",
+                   hx_get=f"/search/results?query={suggestion}",
+                   hx_target="#search-results",
+                   hx_indicator="#loading")
+        )
+    
+    # Create suggestion container
+    suggestion_container = Div(
+        P("Try these searches:", cls="font-bold mb-2"),
+        DivHStacked(*suggestion_buttons, cls="flex-wrap"),
+        cls="mb-4"
+    )
+    
     search_input = Input(type="search",
                          name="query",
                          placeholder="Search documents...",
@@ -124,7 +148,7 @@ def search_bar():
         hx_indicator="#loading"
     )
 
-    return Div(search_form, cls='pt-5')
+    return Div(suggestion_container, search_form, cls='pt-5')
 
 def search(query, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
