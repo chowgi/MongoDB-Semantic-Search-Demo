@@ -181,7 +181,7 @@ def search(query, top_k=5):
     retrieved_nodes = query_engine.query(query)
     
     # Add re-ranked results to the results dictionary
-    results["Re-ranked"] = retrieved_nodes.source_nodes
+    results["Re-ranked Vector Search"] = retrieved_nodes.source_nodes
 
     return results  
 
