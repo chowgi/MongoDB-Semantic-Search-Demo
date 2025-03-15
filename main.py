@@ -231,7 +231,7 @@ def get(query: str = None, request=None):
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
-                    P(Span("Score: ", cls="text-primary"), f"{node.score}"),
+                    P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
                     )
                 card_content.append(node_content)
 
