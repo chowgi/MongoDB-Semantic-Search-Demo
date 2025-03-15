@@ -172,7 +172,7 @@ def search(query, top_k=5):
         # Store the retrieved nodes in the results dictionary using mode_name as key
         results[mode_name] = retrieved_nodes
 
-    # Setup seperate query engine to enable re-ranking of results
+    # Setup separate query engine to enable re-ranking of results
     query_engine = search_index.as_query_engine(
         similarity_top_k=top_k,
         node_postprocessors=[voyageai_rerank],
@@ -180,6 +180,8 @@ def search(query, top_k=5):
 
     retrieved_nodes = query_engine.query(query)
     
+    # Add re-ranked results to the results dictionary
+    results["Re-ranked"] = retrieved_nodes.source_nodes
 
     return results  
 
