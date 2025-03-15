@@ -2,6 +2,7 @@ from fasthtml.common import *
 from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
+from llama_index.postprocessor.voyageai_rerank import VoyageAIRerank
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.llms.openai import OpenAI
@@ -28,10 +29,14 @@ Settings.llm = OpenAI(
     temperature=0.7, model="gpt-4", api_key=openai_api_key
 )
 
-# Set the default embedding model using VoyageAI Embedding
+# Set the default VoyageAI Embedding and re-ranker
 Settings.embed_model = VoyageEmbedding(
     voyage_api_key=voyage_api_key,
     model_name="voyage-3",
+)
+
+voyageai_rerank = VoyageAIRerank(
+    api_key=voyage_api_key, top_k=5, model="rerank-2", truncation=True
 )
 
 # Establish MongoDB client connection using the provided URI
@@ -94,9 +99,6 @@ search_store = MongoDBAtlasVectorSearch(
     fulltext_index_name="text_index",
 )
 
-# # Initialize the storage context for vector store operations
-# search_storage_context = StorageContext.from_defaults(vector_store=search_store)
-
 # Generate the vector index from the existing vector store
 search_index = VectorStoreIndex.from_vector_store(search_store)
 
@@ -116,7 +118,6 @@ def search_bar():
                    cls="text-sm hover:bg-green-500 rounded mb-2 mr-2",
                    hx_get=f"/search/results?query={suggestion}",
                    hx_target="#search-results",
-                   hx_swap="innerHTML",
                    hx_indicator="#loading")
         )
     
@@ -145,7 +146,6 @@ def search_bar():
         ),
         hx_get="/search/results",
         hx_target="#search-results",
-        hx_swap="innerHTML",
         hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
         hx_indicator="#loading"
     )
@@ -172,6 +172,15 @@ def search(query, top_k=5):
         # Store the retrieved nodes in the results dictionary using mode_name as key
         results[mode_name] = retrieved_nodes
 
+    # Setup seperate query engine to enable re-ranking of results
+    query_engine = search_index.as_query_engine(
+        similarity_top_k=top_k,
+        node_postprocessors=[voyageai_rerank],
+    )
+
+    retrieved_nodes = query_engine.query(query)
+    
+
     return results  
 
 @rt("/search")
@@ -185,13 +194,13 @@ def get():
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
             cls="container mx-auto p-4"), # Added container for styling
-        Div(id="search-results", cls="m-2"),
         Div(
-            Div(Loading(cls=LoadingT.dots), 
+            Div(P("Searching", cls="mr-2"),Loading(cls=LoadingT.dots), 
                 cls="flex items-center justify-center"),
             id="loading", 
-            cls="htmx-indicator flex items-center justify-center h-32"
+            cls="htmx-indicator flex items-center justify-center h-12"
         ),
+        Div(id="search-results", cls="m-2"),
         cls=ContainerT.lg
     )
 
@@ -227,7 +236,7 @@ def get(query: str = None, request=None):
             # Add the completed card with a title and content to the list
             cards.append(Card(card_title, *card_content))
 
-        grid = Grid(*cards, cols_lg=3, cls="gap-4")  # Display in a 3-column grid
+        grid = Div(Grid(*cards, cols_lg=3, cls="gap-4"), id='search_results')  # Display in a 3-column grid
 
         # Return the grid first, then the clear_search_bar to ensure the results stay visible
         return grid, clear_search_bar
