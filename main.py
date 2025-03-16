@@ -271,12 +271,10 @@ rag_index = VectorStoreIndex.from_vector_store(rag_store)
 memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
 
 # Configure the system prompt. 
-context_prompt=(
-    "You are a chatbot, able to have normal interactions, as well as talk"
-    " about an essay discussing Bendigo Bank."
-    "Here are the relevant documents for the context:\n"
-    "{context_str}"
-    "\nInstruction: Use the previous chat history, or the context above, to interact and help the user.")
+context_prompt = """You are a chatbot, able to have normal interactions, as well as talk about an essay discussing Bendigo Bank.
+Here are the relevant documents for the context:
+{context_str}
+Instruction: Use the previous chat history, or the context above, to interact and help the user."""
 
 #chat_engine = index.(similarity_top_k=3)
 chat_engine = rag_index.as_chat_engine(
