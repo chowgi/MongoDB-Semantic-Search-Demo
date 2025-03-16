@@ -273,10 +273,7 @@ rag_index = VectorStoreIndex.from_vector_store(rag_store)
 memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
 
 # Configure the system prompt. 
-system_prompt=(
-    "You are a chatbot that answers questions based on the provided documents. "
-    "Use the context below to respond:\n{context_str}"
-),
+system_prompt = "You are a chatbot that answers questions based on the provided documents. Use the context below to respond:\n{context_str}"
 
 #chat_engine = index.(similarity_top_k=3)
 chat_engine = rag_index.as_chat_engine(
