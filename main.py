@@ -258,9 +258,7 @@ rag_store = MongoDBAtlasVectorSearch(
     mongodb_client, 
     db_name=db_name, 
     collection_name=rag_collection_name,
-    embedding_key="embedding",
-    text_key="text",
-    fulltext_index_name="text_index",
+    embedding_key="embedding"
 )
 
 ## Initialize the storage context for vector store operations
@@ -273,14 +271,19 @@ rag_index = VectorStoreIndex.from_vector_store(rag_store)
 memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
 
 # Configure the system prompt. 
-system_prompt = "You are a chatbot that answers questions based on the provided documents. Use the context below to respond:\n{context_str}"
+context_prompt=(
+    "You are a chatbot, able to have normal interactions, as well as talk"
+    " about an essay discussing Bendigo Bank."
+    "Here are the relevant documents for the context:\n"
+    "{context_str}"
+    "\nInstruction: Use the previous chat history, or the context above, to interact and help the user.")
 
 #chat_engine = index.(similarity_top_k=3)
 chat_engine = rag_index.as_chat_engine(
     chat_mode="condense_plus_context", 
     memory=memory,
-    system_prompt=system_prompt,
-    verbose=False)
+    context_prompt=context_prompt,
+    verbose=True)
 
 def create_message_div(role, content):
     return Div(
