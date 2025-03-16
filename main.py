@@ -6,6 +6,7 @@ from llama_index.postprocessor.voyageai_rerank import VoyageAIRerank
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.llms.openai import OpenAI
+from llama_index.core.memory import ChatMemoryBuffer
 from monsterui.all import *
 import pymongo
 import os
@@ -268,9 +269,21 @@ rag_store = MongoDBAtlasVectorSearch(
 # Generate the vector index from the existing vector store
 rag_index = VectorStoreIndex.from_vector_store(rag_store)
 
-# 
+# Configure memory as a test. Need to implment in mongo. 
+memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
+
+# Configure the system prompt. 
+system_prompt=(
+    "You are a chatbot that answers questions based on the provided documents. "
+    "Use the context below to respond:\n{context_str}"
+),
+
 #chat_engine = index.(similarity_top_k=3)
-chat_engine = rag_index.as_chat_engine(chat_mode="best", verbose=True)
+chat_engine = rag_index.as_chat_engine(
+    chat_mode="condense_plus_context", 
+    memory=memory,
+    system_prompt=system_prompt,
+    verbose=False)
 
 def create_message_div(role, content):
     return Div(
