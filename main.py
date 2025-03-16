@@ -131,10 +131,10 @@ def search_bar():
     search_input = Input(type="search",
                          name="query",
                          placeholder="Search documents...",
-                         cls="search-bar",
+                         cls="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                          id="search-input")
     search_button = Button("Search", 
-                          cls=ButtonT.primary,
+                          cls="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90",
                           type="submit")
 
     search_form = Form(
