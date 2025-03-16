@@ -115,7 +115,7 @@ def search_bar():
     for suggestion in suggestions:
         suggestion_buttons.append(
             Button(suggestion,
-                   cls="text-sm hover:bg-green-500 rounded mb-2 mr-2",
+                   cls="text-sm hover:bg-gray-700 hover:text-white rounded mb-2 mr-2",
                    hx_get=f"/search/results?query={suggestion}",
                    hx_target="#search-results",
                    hx_indicator="#loading")
@@ -224,7 +224,7 @@ def get(query: str = None, request=None):
         cards = []  # Initialize the cards list
         for mode_name, nodes in results.items(): 
 
-            card_title = H4(f"Mode: {mode_name}")
+            card_title = H4(f'{mode_name}')
             card_content = []
             for node in nodes:
 
