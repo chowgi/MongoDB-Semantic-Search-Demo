@@ -270,24 +270,36 @@ rag_index = VectorStoreIndex.from_vector_store(rag_store)
 # Configure memory as a test. Need to implment in mongo. 
 memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
 
-# Configure the system prompt. 
-context_prompt = """You are a chatbot, able to have normal interactions, as well as talk about an essay discussing Bendigo Bank.
-Here are the relevant documents for the context:
-{context_str}
-Instruction: Use the previous chat history, or the context above, to interact and help the user."""
 
 #chat_engine = index.(similarity_top_k=3)
 chat_engine = rag_index.as_chat_engine(
-    chat_mode="condense_plus_context", 
+    chat_mode="condense_plus_context",
     memory=memory,
-    context_prompt=context_prompt,
-    verbose=True)
+    llm = OpenAI(model="gpt-3.5-turbo"),
+    context_prompt=(
+        "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk"
+        " about Bendigo Bank products, services and anything else related to the bank."
+        "Here are the relevant documents for the context:\n"
+        "{context_str}"
+        "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
+    ),
+    verbose=False,
+)
 
 def create_message_div(role, content):
     return Div(
         Div(role, cls="chat-header"),
         Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
         cls=f"chat chat-{'end' if role == 'user' else 'start'}")
+
+
+def get_sources(ai_response):
+    sources = []
+    for node in ai_response.source_nodes:
+        if 'url' in node.node.metadata:
+            sources.append(P(f"{node.node.metadata['url']}"))
+    return sources
+    
 
 @rt("/rag")
 def get():
@@ -331,9 +343,16 @@ def post(message: str):
 def post(message: str):
 
     ai_response = chat_engine.chat(message)
+    sources = get_sources(ai_response)
+
+    source_list = List(*sources, cls="list-disc list-inside")
 
     return (
-        create_message_div("assistant", ai_response),
+        create_message_div(
+            "assistant",
+            ai_response,
+            source_list,
+        ),
         Div(id="loading", hx_swap_oob="true"))
 
 
