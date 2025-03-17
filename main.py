@@ -140,9 +140,9 @@ def search_bar():
 
     search_form = Form(
         Grid(
-            Div(search_input, cls="col-span-5"),
+            Div(search_input, cls="col-span-7"),
             Div(search_button, cls="col-span-1"),
-            cols=6,
+            cols=8,
             cls="items-center gap-2"
         ),
         hx_get="/search/results",
@@ -150,8 +150,13 @@ def search_bar():
         hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
         hx_indicator="#loading"
     )
+    search_input = Card(
+        suggestion_container,
+        search_form,
+        cls="rounded-xl"
+    )
 
-    return Div(suggestion_container, search_form, cls='pt-5')
+    return Div(search_input, cls='pt-5')
 
 def search(query, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
@@ -196,9 +201,10 @@ def get():
         Div(H2("Movie Search", cls="pb-10 text-center"),
             P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
-            cls="container mx-auto p-4"), # Added container for styling
+            cls="container mx-auto p-4"),
         Div(
-            Div(P("Searching", cls="mr-2"),Loading(cls=LoadingT.dots), 
+            Div(P("Searching", cls="mr-2"),
+                Loading(cls=LoadingT.dots), 
                 cls="flex items-center justify-center"),
             id="loading", 
             cls="htmx-indicator flex items-center justify-center h-12"
@@ -237,7 +243,7 @@ def get(query: str = None, request=None):
                 card_content.append(node_content)
 
             # Add the completed card with a title and content to the list
-            cards.append(Card(card_title, *card_content))
+            cards.append(Card(card_title, *card_content, cls="rounded-xl"))
 
         grid = Div(Grid(*cards, cols_lg=3, cls="gap-4"), id='search_results')  # Display in a 3-column grid
 
@@ -336,41 +342,54 @@ def rag_suggestions():
         cls="mb-4"
     )
 
-@rt("/rag")
-def get():
-    return Container(
-        navbar(),
-        Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
-            P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
-        Card(
+def chatbot_interface():
+    
+    
+    chat_messages = Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
                 style="overflow: auto"
                ),
-            rag_suggestions(),
-            Form(
-                TextArea(id="message", placeholder="How can I help you today?"),
-                DivFullySpaced(
-                    Button(
-                        "Ask",
-                        cls=ButtonT.primary,
-                        hx_post="/send-message",
-                        hx_target="#chat-messages",
-                        hx_swap="beforeend scroll:#chat-messages:bottom"
-                    ),
-                    DivHStacked(P("VoyageAI result re-ranking  ", cls="align-middle" ), Switch(checked="active"),
-                        cls="space-x-2",
-                        hx_trigger="keydown[key=='Enter' && !shiftKey]",
-                        hx_post="/send-message",
-                        hx_target="#chat-messages",
-                        hx_swap="beforeend scroll:#chat-messages:bottom"
-                    )    
-                ),
-                cls=ContainerT.lg
-            )
-        )
+        cls="mb-4 rounded-xl"
     )
 
+    chat_input = TextArea(id="message", placeholder="How can I help you today?"),
+    chat_button = Button("Ask",
+        cls=ButtonT.primary,
+        hx_post="/send-message",
+        hx_target="#chat-messages",
+        hx_swap="beforeend scroll:#chat-messages:bottom"
+    ),
+    
+    chat_form= Card(
+        rag_suggestions(),
+        Form(
+            Grid(
+                Div(chat_input, cls="col-span-7"),
+                Div(chat_button, cls="col-span-1"),
+                cols=8,
+                cls="items-center gap-2"
+            ),
+            cls="space-y-2",
+            hx_trigger="keydown[key=='Enter' && !shiftKey]",
+            hx_post="/send-message",
+            hx_target="#chat-messages",
+            hx_swap="beforeend scroll:#chat-messages:bottom"
+        ),
+        DivHStacked(Switch(checked="active"), P("VoyageAI re-reranking")),
+        cls="rounded-xl"
+    )
+    return chat_messages, chat_form
+
+@rt("/rag")
+def get():
+    return Container(
+        navbar(),
+        Div(H2("Resource Augmented Generation Assistant", cls="pb-10 text-center"),
+            P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
+        chatbot_interface(),
+        cls=ContainerT.lg
+    )
 @rt("/send-message")
 def post(message: str):
     return (
