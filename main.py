@@ -307,7 +307,7 @@ def get_sources(ai_response):
     for node in ai_response.source_nodes:
         if 'url' in node.node.metadata:
             url = node.node.metadata['url']
-            sources.append(P(A(url, href=url, target="_blank", cls=AT.primary)))
+            sources.append(P(A(url, href=url, target="_blank", cls=AT.muted)))
             print(url)
     return sources
 
@@ -316,7 +316,7 @@ def rag_suggestions():
     suggestions = [
         "What would be a good product for my preschool aged son?",
         "What are your best home loan rates?",
-        "Can you tell me about your term deposit products?"
+        "Can you tell me about NAB term deposit products?"
     ]
 
     suggestion_buttons = []
@@ -350,55 +350,37 @@ def get():
             rag_suggestions(),
             Form(
                 TextArea(id="message", placeholder="How can I help you today?"),
-                DivHStacked(
+                DivFullySpaced(
                     Button(
-                        "Send",
+                        "Ask",
                         cls=ButtonT.primary,
                         hx_post="/send-message",
                         hx_target="#chat-messages",
                         hx_swap="beforeend scroll:#chat-messages:bottom"
                     ),
-                    Div(
-                        Input(type="checkbox", id="use-rerank", name="use-rerank", checked=True),
-                        Label("Use Reranking", For="use-rerank"),
-                        cls="flex items-center gap-2"
-                    ),
-                    cls="flex justify-between items-center"
-                ),
-                cls="space-y-2",
-                hx_trigger="keydown[key=='Enter' && !shiftKey]",
-                hx_post="/send-message",
-                hx_target="#chat-messages",
-                hx_swap="beforeend scroll:#chat-messages:bottom"
-            )
-        ),cls=ContainerT.lg
+                    Div("Turn on Voyage re-ranking", Switch(checked="active"),
+                    cls="space-y-2",
+                    hx_trigger="keydown[key=='Enter' && !shiftKey]",
+                    hx_post="/send-message",
+                    hx_target="#chat-messages",
+                    hx_swap="beforeend scroll:#chat-messages:bottom"
+                )    
+            ),cls=ContainerT.lg
+        )
     )
 
 @rt("/send-message")
-def post(message: str, use_rerank: bool = True):
+def post(message: str):
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post="/get-response", 
-            hx_vals=f'{{"message": "{message}", "use_rerank": {str(use_rerank).lower()}}}',
+        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
     ),Div(Loading(cls=LoadingT.dots), id="loading")
 
 @rt("/get-response")
-def post(message: str, use_rerank: bool = True):
-    node_postprocessors = [voyageai_rerank] if use_rerank else []
-    
-    chat_engine = rag_index.as_chat_engine(
-        chat_mode="condense_plus_context",
-        memory=memory,
-        node_postprocessors=node_postprocessors,
-        context_prompt=(
-            "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk"
-            " about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "
-        ),
-        verbose=False,
-    )
-    
+def post(message: str):
+
     ai_response = chat_engine.chat(message)
 
     return (
