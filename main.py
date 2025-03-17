@@ -289,7 +289,7 @@ def create_chat_engine(rerank):
     Returns:
     Chat engine instance.
     """
-    node_postprocessors = [voyageai_rerank] if rerank else []
+    node_postprocessors = [voyageai_rerank] if rerank == "true" else []
     print(node_postprocessors)
     return rag_index.as_chat_engine(
         chat_mode="condense_plus_context",
@@ -375,7 +375,7 @@ def chatbot_interface():
                 cls="items-center gap-2"
             ),
             DivHStacked(
-                Switch(id="use-rerank", name="use-rerank", checked=True),
+                Switch(id="use-rerank", name="use-rerank", checked=True, value="true"),
                 P("Use VoyageAI Reranking"),
                 cls="flex items-center gap-2 mt-2"
             ),
@@ -399,7 +399,7 @@ def get():
         cls=ContainerT.lg
     )
 @rt("/send-message")
-def post(message: str, use_rerank: bool):
+def post(message: str, use_rerank: str = None):
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
@@ -408,7 +408,12 @@ def post(message: str, use_rerank: bool):
     ),Div(Loading(cls=LoadingT.dots), id="loading")
 
 @rt("/get-response")
-def post(message: str, use_rerank: bool):
+def post(message: str, use_rerank: str = None):
+    if use_rerank == "true":
+        print("Using re-rank")
+    else:
+        print("No re-rank being used")
+
     chat_engine = create_chat_engine(use_rerank)
     ai_response = chat_engine.chat(message)
 
