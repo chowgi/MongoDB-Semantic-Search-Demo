@@ -399,17 +399,17 @@ def get():
         cls=ContainerT.lg
     )
 @rt("/send-message")
-def post(message: str):
+def post(message: str, use_rerank: bool = False):
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
+        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}", "use_rerank": {str(use_rerank).lower()}}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
     ),Div(Loading(cls=LoadingT.dots), id="loading")
 
 @rt("/get-response")
-def post(message: str):
-    chat_engine = create_chat_engine(False)
+def post(message: str, use_rerank: bool = False):
+    chat_engine = create_chat_engine(use_rerank)
     ai_response = chat_engine.chat(message)
 
     return (
