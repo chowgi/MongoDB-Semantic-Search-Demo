@@ -277,20 +277,28 @@ rag_index = VectorStoreIndex.from_vector_store(rag_store)
 memory = ChatMemoryBuffer.from_defaults(token_limit=500)
 
 
-#chat_engine = index.(similarity_top_k=3)
-chat_engine = rag_index.as_chat_engine(
-    chat_mode="condense_plus_context",
-    memory=memory,
-    node_postprocessors=[voyageai_rerank],
-    context_prompt=(
-        "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk"
-        " about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "
-        # "Here are the relevant documents for the context:\n"
-        # "{context_str}"
-        # "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
-    ),
-    verbose=False,
-)
+# Function to create a chat engine
+
+def create_chat_engine(rerank):
+    """
+    Create and return a chat engine for Bendigo Bank assistant.
+
+    Parameters:
+    rerank (bool): Whether to use voyageai_rerank postprocessor.
+
+    Returns:
+    Chat engine instance.
+    """
+    node_postprocessors = [voyageai_rerank] if rerank else []
+    print(node_postprocessors)
+    return rag_index.as_chat_engine(
+        chat_mode="condense_plus_context",
+        memory=memory,
+        node_postprocessors=node_postprocessors,
+        context_prompt=(
+            "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "),
+        verbose=False,
+    )
 
 def create_message_div(role, content):
     source_divs = []
@@ -337,9 +345,7 @@ def rag_suggestions():
         )
 
     return Div(
-        P("Try these questions:", cls="font-bold mb-2"),
-        DivHStacked(*suggestion_buttons, cls="flex-wrap"),
-        cls="mb-4"
+        DivHStacked(P("Try these questions:    ", cls="font-bold mr-4"), *suggestion_buttons, cls="flex-wrap")
     )
 
 def chatbot_interface():
@@ -403,7 +409,7 @@ def post(message: str):
 
 @rt("/get-response")
 def post(message: str):
-
+    chat_engine = create_chat_engine(False)
     ai_response = chat_engine.chat(message)
 
     return (
