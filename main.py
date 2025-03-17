@@ -287,18 +287,18 @@ chat_engine = rag_index.as_chat_engine(
 )
 
 def create_message_div(role, content):
-    sources = get_sources(content)
     source_divs = []
-    if role == "assistant" and sources:
+    if role == "assistant" and hasattr(content, 'source_nodes'):
+        sources = get_sources(content)
         for source in sources:
             source_divs.append(Div(source, cls="chat-source"))
         return Div(
             Div(role, cls="chat-header"),
-            Div(content, P("Sources"), *source_divs, cls=f"chat-bubble chat-bubble-secondary"),
+            Div(str(content), P("Sources"), *source_divs, cls=f"chat-bubble chat-bubble-secondary"),
             cls="chat chat-start")
     return Div(
         Div(role, cls="chat-header"),
-        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        Div(str(content), cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
         cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 
