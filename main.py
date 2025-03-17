@@ -343,8 +343,6 @@ def rag_suggestions():
     )
 
 def chatbot_interface():
-    
-    
     chat_messages = Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
@@ -353,15 +351,15 @@ def chatbot_interface():
         cls="mb-4 rounded-xl"
     )
 
-    chat_input = TextArea(id="message", placeholder="How can I help you today?"),
+    chat_input = TextArea(id="message", placeholder="How can I help you today?")
     chat_button = Button("Ask",
         cls=ButtonT.primary,
         hx_post="/send-message",
         hx_target="#chat-messages",
         hx_swap="beforeend scroll:#chat-messages:bottom"
-    ),
-    
-    chat_form= Card(
+    )
+
+    chat_form = Card(
         rag_suggestions(),
         Form(
             Grid(
@@ -370,13 +368,17 @@ def chatbot_interface():
                 cols=8,
                 cls="items-center gap-2"
             ),
+            DivHStacked(
+                Switch(id="use-rerank", name="use-rerank", checked=True),
+                P("Use VoyageAI Reranking"),
+                cls="flex items-center gap-2 mt-2"
+            ),
             cls="space-y-2",
             hx_trigger="keydown[key=='Enter' && !shiftKey]",
             hx_post="/send-message",
             hx_target="#chat-messages",
             hx_swap="beforeend scroll:#chat-messages:bottom"
         ),
-        DivHStacked(Switch(checked="active"), P("VoyageAI re-reranking")),
         cls="rounded-xl"
     )
     return chat_messages, chat_form
