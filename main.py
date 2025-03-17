@@ -384,7 +384,7 @@ def chatbot_interface():
                 cls="items-center gap-2"
             ),
             DivHStacked(
-                Switch(type="checkbox", name="use_rerank"),
+                Switch(name="use_rerank"),
                 P("Use VoyageAI Reranking"),
                 cls="flex items-center gap-2 mt-2"
             ),
