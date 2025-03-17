@@ -286,13 +286,14 @@ chat_engine = rag_index.as_chat_engine(
     verbose=False,
 )
 
-def create_message_div(role, content, sources):
+def create_message_div(role, content):
+    sources = get_sources(content)
     source_divs = []
     for source in sources:
         source_divs.append(Div(source, cls="chat-source"))
     return Div(
         Div(role, cls="chat-header"),
-        Div(content, *source_divs, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        Div(content, P("Sources"), *source_divs, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
         cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 
@@ -346,13 +347,11 @@ def post(message: str):
 def post(message: str):
 
     ai_response = chat_engine.chat(message)
-    sources = get_sources(ai_response)
 
     return (
         create_message_div(
             "assistant",
             ai_response,
-            sources,
         ),
         Div(id="loading", hx_swap_oob="true"))
 
