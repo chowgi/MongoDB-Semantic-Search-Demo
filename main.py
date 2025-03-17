@@ -307,7 +307,8 @@ def get_sources(ai_response):
     for node in ai_response.source_nodes:
         if 'url' in node.node.metadata:
             url = node.node.metadata['url']
-            sources.append(P(A(url, href=url, target="_blank")))
+            sources.append(P(A(url, href=url, target="_blank", cls=AT.primary)))
+            print(url)
     return sources
 
 
