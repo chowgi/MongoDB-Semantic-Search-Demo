@@ -384,7 +384,7 @@ def chatbot_interface():
                 cls="items-center gap-2"
             ),
             DivHStacked(
-                Switch(name="use_rerank", id="use_rerank", value="true"),
+                Switch(name="use_rerank", id="use_rerank", value="true", checked=True),
                 P("Use VoyageAI Reranking"),
                 cls="flex items-center gap-2 mt-2"
             ),
@@ -409,12 +409,13 @@ def get():
     )
 
 @rt("/send-message")
-def post(message: str, use_rerank: bool = False):
+def post(message: str, use_rerank: str = "false"):
     # Debug the received value
     print(f"Received use_rerank in send-message: {use_rerank}")
+    print(f"Type of use_rerank: {type(use_rerank)}")
 
-    # Ensure proper string conversion for JavaScript
-    rerank_value = "true" if use_rerank == "true" else "false"
+    # Handle checkbox value - when checked, it will be "true"
+    rerank_value = use_rerank
 
     return (
         create_message_div("user", message),
