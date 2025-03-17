@@ -294,7 +294,7 @@ def create_message_div(role, content):
             source_divs.append(Div(source, cls="chat-source"))
         return Div(
             Div(role, cls="chat-header"),
-            Div(str(content), P("Sources", cls="mt-4"), *source_divs, cls=f"chat-bubble chat-bubble-secondary"),
+            Div(str(content), P("Sources", cls="mt-2"), *source_divs, cls=f"chat-bubble chat-bubble-secondary"),
             cls="chat chat-start")
     return Div(
         Div(role, cls="chat-header"),
