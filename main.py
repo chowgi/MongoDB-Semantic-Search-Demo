@@ -111,7 +111,7 @@ def search_bar():
         "Sci-fi films with space exploration themes",
         "Crime thrillers with unexpected plot twists"
     ]
-    
+
     suggestion_buttons = []
     for suggestion in suggestions:
         suggestion_buttons.append(
@@ -121,14 +121,14 @@ def search_bar():
                    hx_target="#search-results",
                    hx_indicator="#loading")
         )
-    
+
     # Create suggestion container
     suggestion_container = Div(
         P("Try these searches:", cls="font-bold mb-2"),
         DivHStacked(*suggestion_buttons, cls="flex-wrap"),
         cls="mb-4"
     )
-    
+
     search_input = Input(type="search",
                          name="query",
                          placeholder="Search documents...",
@@ -180,7 +180,7 @@ def search(query, top_k=5):
     )
 
     retrieved_nodes = query_engine.query(query)
-    
+
     # Add re-ranked results to the results dictionary
     results["Re-ranked Vector Search"] = retrieved_nodes.source_nodes
 
@@ -289,11 +289,16 @@ chat_engine = rag_index.as_chat_engine(
 def create_message_div(role, content):
     sources = get_sources(content)
     source_divs = []
-    for source in sources:
-        source_divs.append(Div(source, cls="chat-source"))
+    if role == "assistant" and sources:
+        for source in sources:
+            source_divs.append(Div(source, cls="chat-source"))
+        return Div(
+            Div(role, cls="chat-header"),
+            Div(content, P("Sources"), *source_divs, cls=f"chat-bubble chat-bubble-secondary"),
+            cls="chat chat-start")
     return Div(
         Div(role, cls="chat-header"),
-        Div(content, P("Sources"), *source_divs, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
         cls=f"chat chat-{'end' if role == 'user' else 'start'}")
 
 
@@ -303,7 +308,7 @@ def get_sources(ai_response):
         if 'url' in node.node.metadata:
             sources.append(P(f"{node.node.metadata['url']}"))
     return sources
-    
+
 
 @rt("/rag")
 def get():
