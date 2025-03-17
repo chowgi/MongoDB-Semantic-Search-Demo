@@ -342,7 +342,7 @@ def get():
 @rt("/send-message")
 def post(message: str):
     return (
-        create_message_div("user", message, []),
+        create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
         Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
