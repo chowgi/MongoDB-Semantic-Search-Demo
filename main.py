@@ -345,7 +345,7 @@ def post(message: str):
     ai_response = chat_engine.chat(message)
     sources = get_sources(ai_response)
 
-    source_list = List(*sources, cls="list-disc list-inside")
+    source_list = Div(*sources, cls="list-disc list-inside")
 
     return (
         create_message_div(
