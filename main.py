@@ -284,13 +284,21 @@ def create_chat_engine(rerank):
     Create and return a chat engine for Bendigo Bank assistant.
 
     Parameters:
-    rerank (bool): Whether to use voyageai_rerank postprocessor.
+    rerank (bool or str): Whether to use voyageai_rerank postprocessor.
 
     Returns:
     Chat engine instance.
     """
-    node_postprocessors = [voyageai_rerank] if rerank == "true" else []
-    print(node_postprocessors)
+    # Convert string values to boolean
+    use_rerank = False
+    if isinstance(rerank, str):
+        use_rerank = rerank.lower() == "true"
+    else:
+        use_rerank = bool(rerank)
+
+    node_postprocessors = [voyageai_rerank] if use_rerank else []
+    print(f"Reranking enabled: {use_rerank}")
+
     return rag_index.as_chat_engine(
         chat_mode="condense_plus_context",
         memory=memory,
@@ -299,6 +307,7 @@ def create_chat_engine(rerank):
             "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "),
         verbose=False,
     )
+
 
 def create_message_div(role, content):
     source_divs = []
@@ -375,7 +384,7 @@ def chatbot_interface():
                 cls="items-center gap-2"
             ),
             DivHStacked(
-                Switch(id="use-rerank", name="use-rerank", checked=True, value="true"),
+                Switch(type="checkbox", name="use_rerank"),
                 P("Use VoyageAI Reranking"),
                 cls="flex items-center gap-2 mt-2"
             ),
@@ -398,31 +407,52 @@ def get():
         chatbot_interface(),
         cls=ContainerT.lg
     )
+
 @rt("/send-message")
-def post(message: str, use_rerank: str = None):
+def post(message: str, use_rerank: bool = False):
+    # Debug the received value
+    print(f"Received use_rerank in send-message: {use_rerank}")
+
+    # Ensure proper string conversion for JavaScript
+    rerank_value = "true" if use_rerank == "true" else "false"
+
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}", "use_rerank": {str(use_rerank).lower()}}}',
-            hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
-    ),Div(Loading(cls=LoadingT.dots), id="loading")
+        Div(hx_trigger="load", 
+            hx_post="/get-response", 
+            hx_vals=f'{{"message": "{message}", "use_rerank": "{rerank_value}"}}',
+            hx_target="#chat-messages", 
+            hx_swap="beforeend scroll:#chat-messages:bottom")
+    ), Div(Loading(cls=LoadingT.dots), id="loading")
+
 
 @rt("/get-response")
-def post(message: str, use_rerank: str = None):
-    if use_rerank == "true":
-        print("Using re-rank")
-    else:
-        print("No re-rank being used")
+def post(message: str, use_rerank: bool = False):
+    try:
+        # Debug information
+        print(f"Message received: {message}")
+        print(f"use_rerank value: {use_rerank}, type: {type(use_rerank)}")
 
-    chat_engine = create_chat_engine(use_rerank)
-    ai_response = chat_engine.chat(message)
+        chat_engine = create_chat_engine(use_rerank)
+        ai_response = chat_engine.chat(message)
 
-    return (
-        create_message_div(
-            "assistant",
-            ai_response,
-        ),
-        Div(id="loading", hx_swap_oob="true"))
+        return (
+            create_message_div(
+                "assistant",
+                ai_response,
+            ),
+            Div(id="loading", hx_swap_oob="true"))
+    except Exception as e:
+        print(f"Error in get-response: {str(e)}")
+        # Return a graceful error message
+        return (
+            create_message_div(
+                "assistant",
+                "I'm sorry, I encountered an error processing your request. Please try again."
+            ),
+            Div(id="loading", hx_swap_oob="true"))
+
 
 
 
