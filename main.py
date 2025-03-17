@@ -268,20 +268,20 @@ rag_store = MongoDBAtlasVectorSearch(
 rag_index = VectorStoreIndex.from_vector_store(rag_store)
 
 # Configure memory as a test. Need to implment in mongo. 
-memory = ChatMemoryBuffer.from_defaults(token_limit=3900)
+memory = ChatMemoryBuffer.from_defaults(token_limit=500)
 
 
 #chat_engine = index.(similarity_top_k=3)
 chat_engine = rag_index.as_chat_engine(
     chat_mode="condense_plus_context",
     memory=memory,
-    llm = OpenAI(model="gpt-3.5-turbo"),
+    node_postprocessors=[voyageai_rerank],
     context_prompt=(
         "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk"
         " about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "
-        "Here are the relevant documents for the context:\n"
-        "{context_str}"
-        "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
+        # "Here are the relevant documents for the context:\n"
+        # "{context_str}"
+        # "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
     ),
     verbose=False,
 )
@@ -314,7 +314,7 @@ def get_sources(ai_response):
 
 def rag_suggestions():
     suggestions = [
-        "What would be a good option for my preschool aged son?",
+        "What would be a good product for my preschool aged son?",
         "What are your best home loan rates?",
         "Can you tell me about your term deposit products?"
     ]
@@ -342,13 +342,14 @@ def get():
         navbar(),
         Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
             P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
-        Card(rag_suggestions(),
+        Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
                 style="overflow: auto"
                ),
+            rag_suggestions(),
             Form(
-                TextArea(id="message", placeholder="Type your message..."),
+                TextArea(id="message", placeholder="How can I help you today?"),
                 Button(
                     "Send",
                     cls=ButtonT.primary,
