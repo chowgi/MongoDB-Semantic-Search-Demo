@@ -312,13 +312,37 @@ def get_sources(ai_response):
     return sources
 
 
+def rag_suggestions():
+    suggestions = [
+        "What would be a good option for my preschool aged son?",
+        "What are your best home loan rates?",
+        "Can you tell me about your term deposit products?"
+    ]
+
+    suggestion_buttons = []
+    for suggestion in suggestions:
+        suggestion_buttons.append(
+            Button(suggestion,
+                   cls="text-sm hover:bg-gray-700 hover:text-white rounded mb-2 mr-2",
+                   hx_post="/send-message",
+                   hx_vals=f'{{"message": "{suggestion}"}}',
+                   hx_target="#chat-messages",
+                   hx_swap="beforeend scroll:#chat-messages:bottom")
+        )
+
+    return Div(
+        P("Try these questions:", cls="font-bold mb-2"),
+        DivHStacked(*suggestion_buttons, cls="flex-wrap"),
+        cls="mb-4"
+    )
+
 @rt("/rag")
 def get():
     return Container(
         navbar(),
         Div(H2("Resource Augmented Generation", cls="pb-10 text-center"),
             P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
-        Card(
+        Card(rag_suggestions(),
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
                 style="overflow: auto"
