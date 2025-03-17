@@ -358,8 +358,8 @@ def get():
                         hx_target="#chat-messages",
                         hx_swap="beforeend scroll:#chat-messages:bottom"
                     ),
-                    Div("Turn on Voyage re-ranking", Switch(checked="active"),
-                        cls="space-y-2",
+                    DivHStacked(P("VoyageAI result re-ranking  ", cls="align-middle" ), Switch(checked="active"),
+                        cls="space-x-2",
                         hx_trigger="keydown[key=='Enter' && !shiftKey]",
                         hx_post="/send-message",
                         hx_target="#chat-messages",
