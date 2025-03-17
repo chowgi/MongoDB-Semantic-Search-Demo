@@ -111,7 +111,7 @@ def search_bar():
         "Sci-fi films with space exploration themes",
         "Crime thrillers with unexpected plot twists"
     ]
-    
+
     suggestion_buttons = []
     for suggestion in suggestions:
         suggestion_buttons.append(
@@ -121,14 +121,14 @@ def search_bar():
                    hx_target="#search-results",
                    hx_indicator="#loading")
         )
-    
+
     # Create suggestion container
     suggestion_container = Div(
         P("Try these searches:", cls="font-bold mb-2"),
         DivHStacked(*suggestion_buttons, cls="flex-wrap"),
         cls="mb-4"
     )
-    
+
     search_input = Input(type="search",
                          name="query",
                          placeholder="Search documents...",
@@ -180,7 +180,7 @@ def search(query, top_k=5):
     )
 
     retrieved_nodes = query_engine.query(query)
-    
+
     # Add re-ranked results to the results dictionary
     results["Re-ranked Vector Search"] = retrieved_nodes.source_nodes
 
@@ -278,7 +278,7 @@ chat_engine = rag_index.as_chat_engine(
     llm = OpenAI(model="gpt-3.5-turbo"),
     context_prompt=(
         "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk"
-        " about Bendigo Bank products, services and anything else related to the bank."
+        " about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "
         "Here are the relevant documents for the context:\n"
         "{context_str}"
         "\nInstruction: Use the previous chat history, or the context above, to interact and help the user."
@@ -287,10 +287,29 @@ chat_engine = rag_index.as_chat_engine(
 )
 
 def create_message_div(role, content):
+    source_divs = []
+    if role == "assistant" and hasattr(content, 'source_nodes'):
+        sources = get_sources(content)
+        for source in sources:
+            source_divs.append(Div(source, cls="chat-source"))
+        return Div(
+            Div(role, cls="chat-header"),
+            Div(str(content), P("Sources"), *source_divs, cls=f"chat-bubble chat-bubble-secondary"),
+            cls="chat chat-start")
     return Div(
         Div(role, cls="chat-header"),
-        Div(content, cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
+        Div(str(content), cls=f"chat-bubble chat-bubble-{'primary' if role == 'user' else 'secondary'}"),
         cls=f"chat chat-{'end' if role == 'user' else 'start'}")
+
+
+def get_sources(ai_response):
+    sources = []
+    for node in ai_response.source_nodes:
+        if 'url' in node.node.metadata:
+            sources.append(P(f"{node.node.metadata['url']}"))
+            print(node.node.metadata['url'])
+    return sources
+
 
 @rt("/rag")
 def get():
@@ -323,11 +342,10 @@ def get():
 
 @rt("/send-message")
 def post(message: str):
-    message_escaped = message.replace('"', '\\"')
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message_escaped}"}}',
+        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
     ),Div(Loading(cls=LoadingT.dots), id="loading")
 
@@ -337,7 +355,10 @@ def post(message: str):
     ai_response = chat_engine.chat(message)
 
     return (
-        create_message_div("assistant", ai_response),
+        create_message_div(
+            "assistant",
+            ai_response,
+        ),
         Div(id="loading", hx_swap_oob="true"))
 
 
