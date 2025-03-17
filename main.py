@@ -323,10 +323,11 @@ def get():
 
 @rt("/send-message")
 def post(message: str):
+    message_escaped = message.replace('"', '\\"')
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
-        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message}"}}',
+        Div(hx_trigger="load", hx_post="/get-response", hx_vals=f'{{"message": "{message_escaped}"}}',
             hx_target="#chat-messages", hx_swap="beforeend scroll:#chat-messages:bottom")
     ),Div(Loading(cls=LoadingT.dots), id="loading")
 
