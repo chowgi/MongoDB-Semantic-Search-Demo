@@ -219,7 +219,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None, **kwargs):
+def get(query: str = None, request=None):
 
     clear_search_bar = Input(type="search",
          name="query",
