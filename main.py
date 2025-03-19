@@ -161,7 +161,7 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, top_k=5, **kwargs):
+def search(query, top_k=5, alpha=0.5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
 
@@ -170,7 +170,7 @@ def search(query, top_k=5, **kwargs):
         retriever = search_index.as_retriever(
             similarity_top_k=top_k,
             vector_store_query_mode=mode,
-            **kwargs
+            alpha=float(alpha)
         )
 
         # Retrieve nodes using the current mode
@@ -219,7 +219,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None):
+def get(query: str = None, alpha: str = "0.5", request=None):
 
     clear_search_bar = Input(type="search",
          name="query",
@@ -229,7 +229,7 @@ def get(query: str = None, request=None):
          hx_swap_oob="true")
 
     if query:
-        results = search(query, top_k=5, **kwargs)
+        results = search(query, top_k=5, alpha=alpha)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
