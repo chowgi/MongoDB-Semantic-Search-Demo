@@ -138,6 +138,8 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="submit")
 
+    search_alpha = Range(value='0.5', min='0.1', max='1.0', name='alpha', id='alpha'),
+
     search_form = Form(
         Grid(
             Div(search_input, cls="col-span-7"),
@@ -145,6 +147,7 @@ def search_bar():
             cols=8,
             cls="items-center gap-2"
         ),
+        search_alpha,
         hx_get="/search/results",
         hx_target="#search-results",
         hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
@@ -158,7 +161,7 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, top_k=5):
+def search(query, top_k=5, **kwargs):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
 
@@ -166,7 +169,8 @@ def search(query, top_k=5):
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
             similarity_top_k=top_k,
-            vector_store_query_mode=mode
+            vector_store_query_mode=mode,
+            **kwargs
         )
 
         # Retrieve nodes using the current mode
@@ -215,7 +219,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None):
+def get(query: str = None, request=None, **kwargs):
 
     clear_search_bar = Input(type="search",
          name="query",
@@ -225,7 +229,7 @@ def get(query: str = None, request=None):
          hx_swap_oob="true")
 
     if query:
-        results = search(query, top_k=5)
+        results = search(query, top_k=5, **kwargs)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
@@ -279,25 +283,11 @@ memory = ChatMemoryBuffer.from_defaults(token_limit=500)
 
 # Function to create a chat engine
 
-def create_chat_engine(rerank):
-    """
-    Create and return a chat engine for Bendigo Bank assistant.
+def create_chat_engine(use_rerank):
 
-    Parameters:
-    rerank (bool or str): Whether to use voyageai_rerank postprocessor.
-
-    Returns:
-    Chat engine instance.
-    """
-    # Convert string values to boolean
-    use_rerank = False
-    if isinstance(rerank, str):
-        use_rerank = rerank.lower() == "true"
-    else:
-        use_rerank = bool(rerank)
 
     node_postprocessors = [voyageai_rerank] if use_rerank else []
-    print(f"Reranking enabled: {use_rerank}")
+    print(f"Reranking used in chat_engine: {use_rerank}")
 
     return rag_index.as_chat_engine(
         chat_mode="condense_plus_context",
@@ -331,7 +321,6 @@ def get_sources(ai_response):
         if 'url' in node.node.metadata:
             url = node.node.metadata['url']
             sources.append(P(A(url, href=url, target="_blank", cls=AT.muted)))
-            print(url)
     return sources
 
 
@@ -375,8 +364,8 @@ def chatbot_interface():
     )
 
     chat_form = Card(
-        rag_suggestions(),
         Form(
+            rag_suggestions(),
             Grid(
                 Div(chat_input, cls="col-span-7"),
                 Div(chat_button, cls="col-span-1"),
@@ -384,7 +373,7 @@ def chatbot_interface():
                 cls="items-center gap-2"
             ),
             DivHStacked(
-                Switch(name="use_rerank", id="use_rerank", value=True, type="checkbox", checked=True),
+                Switch(name="use_rerank", id="use_rerank"),
                 P("Use VoyageAI Reranking"),
                 cls="flex items-center gap-2 mt-2"
             ),
@@ -410,30 +399,24 @@ def get():
 
 @rt("/send-message")
 def post(message: str, use_rerank: bool = False):
-    # Debug the received value
-    print(f"Received use_rerank in send-message: {use_rerank}")
-    print(f"Type of use_rerank: {type(use_rerank)}")
 
     # Use the boolean value directly
-    rerank_value = use_rerank
+    #rerank_value = use_rerank
 
     return (
         create_message_div("user", message),
         TextArea(id="message", placeholder="Type your message...", hx_swap_oob="true"),
         Div(hx_trigger="load", 
             hx_post="/get-response", 
-            hx_vals=f'{{"message": "{message}", "use_rerank": "{rerank_value}"}}',
+            hx_vals=f'{{"message": "{message}", "use_rerank": "{use_rerank}"}}',
             hx_target="#chat-messages", 
             hx_swap="beforeend scroll:#chat-messages:bottom")
     ), Div(Loading(cls=LoadingT.dots), id="loading")
 
 
-@rt("/get-response")
-def post(message: str, use_rerank: bool = False):
+@app.post("/get-response")
+def post(message: str, use_rerank: bool):
     try:
-        # Debug information
-        print(f"Message received: {message}")
-        print(f"use_rerank value: {use_rerank}, type: {type(use_rerank)}")
 
         chat_engine = create_chat_engine(use_rerank)
         ai_response = chat_engine.chat(message)
