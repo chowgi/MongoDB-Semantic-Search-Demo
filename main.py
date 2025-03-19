@@ -161,10 +161,10 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, top_k=5, alpha=0.5):
+def search(query, top_k=5, alpha):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
-
+    print(float(alpha))
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
