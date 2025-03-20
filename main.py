@@ -138,7 +138,7 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="submit")
 
-    search_alpha = Range(value='0.5', min='0.1', max='1.0', name='alpha', id='alpha'),
+    search_alpha = Range(value='5', min='1', max='10', name='alpha', id='alpha'),
 
     search_form = Form(
         Grid(
@@ -161,16 +161,16 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, top_k=5, alpha):
+def search(query, alpha, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
-    print(float(alpha))
+    print(float(alpha)/10)
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
             similarity_top_k=top_k,
             vector_store_query_mode=mode,
-            alpha=float(alpha)
+            alpha=float(alpha)/10
         )
 
         # Retrieve nodes using the current mode
@@ -219,8 +219,9 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, alpha: str = "0.5", request=None):
+def get(query: str = None, request=None, **qwargs):
 
+    print(**qwargs)
     clear_search_bar = Input(type="search",
          name="query",
          placeholder="Search documents...",
