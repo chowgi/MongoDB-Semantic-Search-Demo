@@ -170,7 +170,7 @@ def search(query, alpha, top_k=5):
         retriever = search_index.as_retriever(
             similarity_top_k=top_k,
             vector_store_query_mode=mode,
-            alpha=float(alpha)/10
+            alpha=alpha
         )
 
         # Retrieve nodes using the current mode
@@ -219,7 +219,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None, **qwargs):
+def get(query: str = None, request=None, alpha: flo):
 
     print(**qwargs)
     clear_search_bar = Input(type="search",
