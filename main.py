@@ -164,7 +164,8 @@ def search_bar():
 def search(query, alpha, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
-    alpha_value = float(alpha) / 10  # Convert range value (1-10) to 0.1-1.0
+    alpha_value = float(alpha or 5) / 10  # Convert range value (1-10) to 0.1-1.0
+    print(f"Alpha range value: {alpha}, converted to: {alpha_value}")
     print(alpha_value)
     for mode in modes:
         # Create a retriever with the specific mode
