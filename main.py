@@ -138,7 +138,8 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="submit")
 
-    search_alpha = Range(value='5', min='1', max='10', name='alpha', id='alpha'),
+    search_alpha = Range(value='5', min='1', max='10', name='alpha', id='alpha', 
+                        hx_include="#alpha"),
 
     search_form = Form(
         Grid(
