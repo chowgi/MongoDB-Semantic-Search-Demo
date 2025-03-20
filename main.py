@@ -138,8 +138,7 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="submit")
 
-    search_alpha = Range(value='5', min='1', max='10', name='alpha', id='alpha', 
-                        hx_include="#alpha"),
+    search_alpha = Range(value='5', min='1', max='10', name='alpha', id='alpha')
 
     search_form = Form(
         Grid(
@@ -165,7 +164,7 @@ def search_bar():
 def search(query, alpha, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
-    alpha_value = float(alpha or 5) / 10  # Convert range value (1-10) to 0.1-1.0
+    alpha_value = float(alpha) / 10  # Convert range value (1-10) to 0.1-1.0
     print(f"Alpha range value: {alpha}, converted to: {alpha_value}")
     print(alpha_value)
     for mode in modes:
@@ -189,6 +188,7 @@ def search(query, alpha, top_k=5):
     query_engine = search_index.as_query_engine(
         similarity_top_k=top_k,
         node_postprocessors=[voyageai_rerank],
+        alpha = alpha_value
     )
 
     retrieved_nodes = query_engine.query(query)
@@ -222,7 +222,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None, alpha: str = "5"):
+def get(query: str = None, request=None, alpha: int=None):
     clear_search_bar = Input(type="search",
          name="query",
          placeholder="Search documents...",
