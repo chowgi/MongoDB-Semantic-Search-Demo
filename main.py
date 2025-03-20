@@ -165,6 +165,7 @@ def search(query, alpha, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
     alpha_value = float(alpha) / 10  # Convert range value (1-10) to 0.1-1.0
+    print(alpha_value)
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
