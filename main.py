@@ -164,13 +164,13 @@ def search_bar():
 def search(query, alpha, top_k=5):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
-    print(float(alpha)/10)
+    alpha_value = float(alpha) / 10  # Convert range value (1-10) to 0.1-1.0
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
             similarity_top_k=top_k,
             vector_store_query_mode=mode,
-            alpha=alpha
+            alpha=alpha_value
         )
 
         # Retrieve nodes using the current mode
@@ -219,9 +219,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None, alpha: flo):
-
-    print(**qwargs)
+def get(query: str = None, request=None, alpha: str = "5"):
     clear_search_bar = Input(type="search",
          name="query",
          placeholder="Search documents...",
