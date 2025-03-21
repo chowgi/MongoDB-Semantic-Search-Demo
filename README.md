@@ -4,6 +4,7 @@ This project demonstrates MongoDB + Voyage AI integration with two standalone Fa
 
 1. **Search Application** - Compare Text, Vector, and Hybrid Search Methods
 2. **RAG Application** - Retrieval Augmented Generation chat interface
+3. **Agent Demo** - Coming Soon
 
 ## Environment Variables Required
 
@@ -17,18 +18,10 @@ Set the following environment variables before running the applications:
 
 ### Search Application
 
-Run the search application on port 3030:
+Run the search application
 
 ```bash
-python search_app.py
-```
-
-### RAG Application
-
-Run the RAG application on port 3000:
-
-```bash
-python rag_app.py
+python main.py
 ```
 
 ## Tools and Libraries Used
