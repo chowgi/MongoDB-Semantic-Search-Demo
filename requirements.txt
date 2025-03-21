@@ -1,0 +1,15 @@
+
+matplotlib
+ipython
+llama-index
+llama-index-core
+llama-index-embeddings-voyageai
+llama-index-vector-stores-mongodb
+llama-index-llms-openai
+llama-index-postprocessor-voyageai-rerank
+trafilatura
+pymongo
+python-fasthtml
+MonsterUI
+gpt-index
+edx-search
