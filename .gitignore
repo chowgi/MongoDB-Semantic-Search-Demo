@@ -5,6 +5,7 @@
 !.gitignore
 !main.py
 !README.md
+!requirements.txt
 
 # And not this directory and its contents
 !public/
