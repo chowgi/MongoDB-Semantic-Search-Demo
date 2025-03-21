@@ -4,7 +4,7 @@ from llama_index.core import VectorStoreIndex, StorageContext, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from llama_index.postprocessor.voyageai_rerank import VoyageAIRerank
 from llama_index.llms.openai import OpenAI
-from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.core import VectorStoreIndex
 from llama_index.llms.openai import OpenAI
 from llama_index.core.memory import ChatMemoryBuffer
 from monsterui.all import *
@@ -105,9 +105,10 @@ search_index = VectorStoreIndex.from_vector_store(search_store)
 
 # Build the search bar
 def search_bar():
+    
     # Create search suggestion buttons
     suggestions = [
-        "Action movies about humans fighting machines",
+        "Action movies about humans fighting robots",
         "Sci-fi films with space exploration themes",
         "Crime thrillers with unexpected plot twists"
     ]
@@ -116,10 +117,12 @@ def search_bar():
     for suggestion in suggestions:
         suggestion_buttons.append(
             Button(suggestion,
+                   name="query",
                    cls="text-sm hover:bg-gray-700 hover:text-white rounded mb-2 mr-2",
-                   hx_get=f"/search/results?query={suggestion}",
-                   hx_target="#search-results",
-                   hx_indicator="#loading")
+                   hx_target="#search-input",
+                   hx_post=f"/suggest?query={suggestion}",
+                   hx_swap="OuterHTML"
+                  )
         )
 
     # Create suggestion container
@@ -138,16 +141,17 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="submit")
 
-    search_alpha = Range(value='5', min='1', max='10', name='alpha', id='alpha')
+    alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
 
     search_form = Form(
         Grid(
             Div(search_input, cls="col-span-7"),
             Div(search_button, cls="col-span-1"),
+            Div(P("Text/Vector Bias:", cls="col-span-2")),
+            Div(alpha_range, cls="col-span-2"),
             cols=8,
             cls="items-center gap-2"
         ),
-        search_alpha,
         hx_get="/search/results",
         hx_target="#search-results",
         hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
@@ -161,18 +165,15 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, alpha, top_k=5):
+def search(query, alpha):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
-    alpha_value = float(alpha) / 10  # Convert range value (1-10) to 0.1-1.0
-    print(f"Alpha range value: {alpha}, converted to: {alpha_value}")
-    print(alpha_value)
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
-            similarity_top_k=top_k,
+            similarity_top_k=5,
             vector_store_query_mode=mode,
-            alpha=alpha_value
+            alpha=alpha
         )
 
         # Retrieve nodes using the current mode
@@ -186,9 +187,9 @@ def search(query, alpha, top_k=5):
 
     # Setup separate query engine to enable re-ranking of results
     query_engine = search_index.as_query_engine(
-        similarity_top_k=top_k,
+        similarity_top_k=5,
         node_postprocessors=[voyageai_rerank],
-        alpha = alpha_value
+        alpha=alpha
     )
 
     retrieved_nodes = query_engine.query(query)
@@ -222,7 +223,8 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str = None, request=None, alpha: int=None):
+def get(query: str, alpha: int):
+
     clear_search_bar = Input(type="search",
          name="query",
          placeholder="Search documents...",
@@ -231,7 +233,7 @@ def get(query: str = None, request=None, alpha: int=None):
          hx_swap_oob="true")
 
     if query:
-        results = search(query, top_k=5, alpha=alpha)
+        results = search(query, alpha=alpha/10)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
@@ -257,6 +259,16 @@ def get(query: str = None, request=None, alpha: int=None):
         return grid, clear_search_bar
     else:
         return P("Please enter a search query.")
+
+@rt("/suggest")
+def post(query: str):
+    return Input(type="search",
+         name="query",
+         value=query,
+         placeholder="Search documents...",
+         cls="search-bar",
+         id="search-input",
+        hx_swap_oob="true")
 
 
 ##################################################
