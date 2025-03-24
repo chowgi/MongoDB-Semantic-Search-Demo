@@ -24,7 +24,6 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 db_name = "mongo_voyage_demos"
-top_k = 5
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
@@ -38,7 +37,7 @@ Settings.embed_model = VoyageEmbedding(
 )
 
 voyageai_rerank = VoyageAIRerank(
-    api_key=voyage_api_key, top_k=top_k, model="rerank-2", truncation=True
+    api_key=voyage_api_key, top_k=3, model="rerank-2", truncation=True
 )
 
 # Establish MongoDB client connection using the provided URI
@@ -166,13 +165,13 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, alpha, top_k):
+def search(query, alpha):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
-            similarity_top_k=top_k,
+            similarity_top_k=5,
             vector_store_query_mode=mode,
             alpha=alpha
         )
@@ -188,7 +187,7 @@ def search(query, alpha, top_k):
 
     # Setup separate query engine to enable re-ranking of results
     query_engine = search_index.as_query_engine(
-        similarity_top_k=top_k,
+        similarity_top_k=5,
         node_postprocessors=[voyageai_rerank],
         alpha=alpha
     )
@@ -234,7 +233,7 @@ def get(query: str, alpha: int):
          hx_swap_oob="true")
 
     if query:
-        results = search(query=query, alpha=alpha/10, top_k=top_k)
+        results = search(query, alpha=alpha/10)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
@@ -305,12 +304,13 @@ def create_chat_engine(use_rerank):
     print(f"Reranking used in chat_engine: {use_rerank}")
 
     return rag_index.as_chat_engine(
-        chat_mode="condense_plus_context",
+        chat_mode="condense_question",
         memory=memory,
         node_postprocessors=node_postprocessors,
+        similarity_top_k=3,
         context_prompt=(
-            "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "),
-        verbose=False,
+            "You are a Bendigo Bank assistant who can answer questions about Bendigo Bank products, services and anything else related to the bank. If the answer is not contained in the above context just say 'I don't know' "),
+        verbose=True,
     )
 
 
@@ -341,7 +341,7 @@ def get_sources(ai_response):
 
 def rag_suggestions():
     suggestions = [
-        "What would be a good product for my preschool aged son?",
+        "What would be a good product for my young son?",
         "What are your best home loan rates?",
         "Can you tell me about NAB term deposit products?"
     ]
@@ -404,7 +404,7 @@ def chatbot_interface():
 
 @rt("/rag")
 def get():
-    return Container(
+    return Title("MongoDB + Voyage AI Demo"), Container(
         navbar(),
         Div(H2("Resource Augmented Generation Assistant", cls="pb-10 text-center"),
             P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
