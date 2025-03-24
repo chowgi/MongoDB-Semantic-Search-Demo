@@ -336,7 +336,8 @@ def get_sources(ai_response):
         if 'url' in node.node.metadata:
             url = node.node.metadata['url']
             score = node.score
-            sources.append(P(A(url, href=url, target="_blank", cls=AT.muted)), P(f'Score: {score}'))
+            sources.append(P(A(url, href=url, target="_blank", cls=AT.muted)))
+            sources.append(P(f'Score: {score}'))
     return sources
 
 
