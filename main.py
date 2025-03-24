@@ -24,6 +24,7 @@ openai_api_key = os.environ['OPENAI_API_KEY']
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
 db_name = "mongo_voyage_demos"
+top_k = 5
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
@@ -37,7 +38,7 @@ Settings.embed_model = VoyageEmbedding(
 )
 
 voyageai_rerank = VoyageAIRerank(
-    api_key=voyage_api_key, top_k=5, model="rerank-2", truncation=True
+    api_key=voyage_api_key, top_k=top_k, model="rerank-2", truncation=True
 )
 
 # Establish MongoDB client connection using the provided URI
@@ -165,13 +166,13 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
-def search(query, alpha):
+def search(query, alpha, top_k):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
     for mode in modes:
         # Create a retriever with the specific mode
         retriever = search_index.as_retriever(
-            similarity_top_k=5,
+            similarity_top_k=top_k,
             vector_store_query_mode=mode,
             alpha=alpha
         )
@@ -187,7 +188,7 @@ def search(query, alpha):
 
     # Setup separate query engine to enable re-ranking of results
     query_engine = search_index.as_query_engine(
-        similarity_top_k=5,
+        similarity_top_k=top_k,
         node_postprocessors=[voyageai_rerank],
         alpha=alpha
     )
@@ -233,7 +234,7 @@ def get(query: str, alpha: int):
          hx_swap_oob="true")
 
     if query:
-        results = search(query, alpha=alpha/10)
+        results = search(query, alpha=alpha/10, top_k)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
@@ -292,17 +293,20 @@ rag_store = MongoDBAtlasVectorSearch(
 rag_index = VectorStoreIndex.from_vector_store(rag_store)
 
 # Configure memory as a test. Need to implment in mongo. 
-#memory = ChatMemoryBuffer.from_defaults(token_limit=500)
+memory = ChatMemoryBuffer.from_defaults(token_limit=500)
 
 
 # Function to create a chat engine
 
-def create_query_engine(use_rerank):
+def create_chat_engine(use_rerank):
+
+
     node_postprocessors = [voyageai_rerank] if use_rerank else []
     print(f"Reranking used in chat_engine: {use_rerank}")
 
-    return rag_index.as_query_engine(
-        similarity_top_k=5,
+    return rag_index.as_chat_engine(
+        chat_mode="condense_plus_context",
+        memory=memory,
         node_postprocessors=node_postprocessors,
         context_prompt=(
             "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "),
@@ -429,8 +433,8 @@ def post(message: str, use_rerank: bool = False):
 def post(message: str, use_rerank: bool):
     try:
 
-        engine = create_query_engine(use_rerank)
-        ai_response = engine.query(message)
+        chat_engine = create_chat_engine(use_rerank)
+        ai_response = chat_engine.chat(message)
 
         return (
             create_message_div(
