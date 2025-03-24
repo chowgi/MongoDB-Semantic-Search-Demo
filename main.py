@@ -234,7 +234,7 @@ def get(query: str, alpha: int):
          hx_swap_oob="true")
 
     if query:
-        results = search(query, alpha=alpha/10, top_k)
+        results = search(query=query, alpha=alpha/10, top_k=top_k)
 
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
