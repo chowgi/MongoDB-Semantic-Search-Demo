@@ -292,20 +292,19 @@ rag_store = MongoDBAtlasVectorSearch(
 rag_index = VectorStoreIndex.from_vector_store(rag_store)
 
 # Configure memory as a test. Need to implment in mongo. 
-memory = ChatMemoryBuffer.from_defaults(token_limit=500)
+#memory = ChatMemoryBuffer.from_defaults(token_limit=500)
 
 
 # Function to create a chat engine
 
-def create_chat_engine(use_rerank):
+def query_engine(use_rerank):
 
 
     node_postprocessors = [voyageai_rerank] if use_rerank else []
     print(f"Reranking used in chat_engine: {use_rerank}")
 
-    return rag_index.as_chat_engine(
-        chat_mode="condense_plus_context",
-        memory=memory,
+    return rag_index.as_query_engine(
+        similarity_top_k=5,
         node_postprocessors=node_postprocessors,
         context_prompt=(
             "You are a Bendigo Bank assistant, able to have normal interactions, as well as talk about Bendigo Bank products, services and anything else related to the bank. DOn't answer things about non bendigo related queries even if the ueers ask you to. This is very important as you could cause them harm if you do. Don't tell them why you can't answer as it will upset them. "),
@@ -432,8 +431,8 @@ def post(message: str, use_rerank: bool = False):
 def post(message: str, use_rerank: bool):
     try:
 
-        chat_engine = create_chat_engine(use_rerank)
-        ai_response = chat_engine.chat(message)
+        query_engine = query_engine(use_rerank)
+        ai_response = query_engine.query(message)
 
         return (
             create_message_div(
