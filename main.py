@@ -297,9 +297,7 @@ rag_index = VectorStoreIndex.from_vector_store(rag_store)
 
 # Function to create a chat engine
 
-def query_engine(use_rerank):
-
-
+def create_query_engine(use_rerank):
     node_postprocessors = [voyageai_rerank] if use_rerank else []
     print(f"Reranking used in chat_engine: {use_rerank}")
 
@@ -431,8 +429,8 @@ def post(message: str, use_rerank: bool = False):
 def post(message: str, use_rerank: bool):
     try:
 
-        query_engine = query_engine(use_rerank)
-        ai_response = query_engine.query(message)
+        engine = create_query_engine(use_rerank)
+        ai_response = engine.query(message)
 
         return (
             create_message_div(
