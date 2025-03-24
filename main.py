@@ -335,7 +335,8 @@ def get_sources(ai_response):
     for node in ai_response.source_nodes:
         if 'url' in node.node.metadata:
             url = node.node.metadata['url']
-            sources.append(P(A(url, href=url, target="_blank", cls=AT.muted)))
+            score = node.score
+            sources.append(P(A(url, href=url, target="_blank", cls=AT.muted)), P(f'Score: {score}'))
     return sources
 
 
@@ -432,34 +433,10 @@ def post(message: str, use_rerank: bool = False):
 @app.post("/get-response")
 def post(message: str, use_rerank: bool):
     try:
+
         chat_engine = create_chat_engine(use_rerank)
         ai_response = chat_engine.chat(message)
-        
-        # If reranking is enabled, add verbose output
-        if use_rerank and hasattr(ai_response, 'response_gen'):
-            verbose_output = []
-            for node in ai_response.source_nodes:
-                verbose_output.append(
-                    Div(
-                        P(f"Score: {node.score:.4f}"),
-                        P(f"Text chunk: {node.node.text[:200]}..."),
-                        cls="bg-gray-700 p-2 rounded mt-2 text-sm"
-                    )
-                )
-            
-            return (
-                create_message_div(
-                    "assistant",
-                    ai_response,
-                ),
-                Div(
-                    P("Reranking Debug Output:", cls="font-bold mt-4"),
-                    *verbose_output,
-                    cls="mt-4 space-y-2"
-                ),
-                Div(id="loading", hx_swap_oob="true")
-            )
-        
+
         return (
             create_message_div(
                 "assistant",
