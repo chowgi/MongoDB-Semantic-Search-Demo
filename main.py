@@ -27,7 +27,7 @@ db_name = "mongo_voyage_demos"
 
 # Configure the default Language Model with OpenAI's API
 Settings.llm = OpenAI(
-    temperature=0.7, model="gpt-4", api_key=openai_api_key
+    temperature=0.7, model="gpt-3.5-turbo", api_key=openai_api_key
 )
 
 # Set the default VoyageAI Embedding and re-ranker
@@ -37,7 +37,7 @@ Settings.embed_model = VoyageEmbedding(
 )
 
 voyageai_rerank = VoyageAIRerank(
-    api_key=voyage_api_key, top_k=3, model="rerank-2", truncation=True
+    api_key=voyage_api_key, top_k=5, model="rerank-2", truncation=True
 )
 
 # Establish MongoDB client connection using the provided URI
@@ -207,7 +207,7 @@ def get():
     return Title("Search - MongoDB + Voyage AI"), Container(
         navbar(),
         Div(H2("Movie Search", cls="pb-10 text-center"),
-            P("Compare Text, Vector, and Hybrid Search Methods", cls="pb-5 text-center uk-text-lead"),
+            P("Compare Text, Vector, Hybrid and Re-ranked Search Methods", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
             cls="container mx-auto p-4"),
         Div(
@@ -296,7 +296,6 @@ memory = ChatMemoryBuffer.from_defaults(token_limit=500)
 
 
 # Function to create a chat engine
-
 def create_chat_engine(use_rerank):
 
 
@@ -304,12 +303,25 @@ def create_chat_engine(use_rerank):
     print(f"Reranking used in chat_engine: {use_rerank}")
 
     return rag_index.as_chat_engine(
-        chat_mode="condense_question",
+        chat_mode="context",
         memory=memory,
         node_postprocessors=node_postprocessors,
         similarity_top_k=3,
         context_prompt=(
             "You are a Bendigo Bank assistant who can answer questions about Bendigo Bank products, services and anything else related to the bank. If the answer is not contained in the above context just say 'I don't know' "),
+        verbose=True,
+    )
+
+# Function to create a chat engine
+def create_query_engine(use_rerank):
+
+
+    node_postprocessors = [voyageai_rerank] if use_rerank else []
+    print(f"Reranking used in chat_engine: {use_rerank}")
+
+    return rag_index.as_query_engine(
+        node_postprocessors=node_postprocessors,
+        similarity_top_k=3,
         verbose=True,
     )
 
@@ -410,8 +422,8 @@ def chatbot_interface():
 def get():
     return Title("MongoDB + Voyage AI Demo"), Container(
         navbar(),
-        Div(H2("Resource Augmented Generation Assistant", cls="pb-10 text-center"),
-            P("Deliver contextually relevant and accurate responses based on up-to-date private data source.", cls="pb-5 text-center uk-text-lead")),
+        Div(H2("Q&A With Your Data", cls="pb-10 text-center"),
+            P("Deliver contextually relevant and accurate responses based on private data sources. Commonly referred to as Resource Augmented Generation (RAG).", cls="pb-5 text-center uk-text-lead")),
         chatbot_interface(),
         cls=ContainerT.lg
     )
@@ -437,8 +449,11 @@ def post(message: str, use_rerank: bool = False):
 def post(message: str, use_rerank: bool):
     try:
 
-        chat_engine = create_chat_engine(use_rerank)
-        ai_response = chat_engine.chat(message)
+        # chat_engine = create_chat_engine(use_rerank)
+        # ai_response = chat_engine.chat(message)
+
+        query_engine = create_query_engine(use_rerank)
+        ai_response = query_engine.query(message)
 
         return (
             create_message_div(
