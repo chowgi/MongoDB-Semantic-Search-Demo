@@ -377,12 +377,21 @@ def rag_suggestions():
         DivHStacked(P("Try these questions:    ", cls="font-bold mr-4"), *suggestion_buttons, cls="flex-wrap")
     )
 
+def workflow_modal():
+    return Modal(
+        H3("Under the Hood", cls="font-bold text-lg mb-4"),
+        Img(src="/workflow.svg", alt="RAG Workflow", cls="w-full"),
+        P("This diagram shows how our RAG system processes your queries using MongoDB and VoyageAI.", cls="mt-4"),
+        id="workflow-modal"
+    )
+
 def chatbot_interface():
     chat_messages = Card(
             Div(id="chat-messages", 
                 cls="space-y-4 h-[60vh] overflow-y-auto p-4",
                 style="overflow: auto"
                ),
+        workflow_modal(),
         cls="mb-4 rounded-xl"
     )
 
@@ -406,6 +415,9 @@ def chatbot_interface():
             DivHStacked(
                 Switch(name="use_rerank", id="use_rerank"),
                 P("Use VoyageAI Reranking"),
+                Button("View Workflow", 
+                       onclick="window.workflow_modal.showModal()",
+                       cls=(ButtonT.secondary, "ml-4")),
                 cls="flex items-center gap-2 mt-2"
             ),
             cls="space-y-2",
