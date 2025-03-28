@@ -110,7 +110,7 @@ def search_bar():
     suggestions = [
         "Action movies about humans fighting robots",
         "Sci-fi films with space exploration themes",
-        "Crime thrillers with unexpected plot twists"
+        "Movies for kids that includes animals"
     ]
 
     suggestion_buttons = []
@@ -254,39 +254,21 @@ def get(query: str, alpha: int):
         for mode_name, nodes in results.items(): 
 
             card_title = H4(f'{mode_name}')
-            # Import matplotlib at the top of the file if not already imported
-            import matplotlib.pyplot as plt
-            import io
-            import base64
-            
-            # Create plot for this mode
-            plt.figure(figsize=(6, 2))
-            scores = [node.score for node in nodes]
-            plt.bar(range(len(scores)), scores)
-            plt.title(f'{mode_name} Scores')
-            plt.ylim(0, 1)
-            
-            # Convert plot to base64 string
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png', bbox_inches='tight')
-            plt.close()
-            buf.seek(0)
-            plot_url = f"data:image/png;base64,{base64.b64encode(buf.getvalue()).decode('utf-8')}"
-            
             card_content = []
-            for node in nodes:
+            for node in nodes[:3]:
+
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
+                    P(Span("Plot: ", cls="text-primary"), f"{node.text.split('Plot:')[-1][:250] if 'Plot:' in node.text else node.text[:250]}"),
                     )
                 card_content.append(node_content)
 
-            # Add the plot image and the completed card with a title and content to the list
-            plot_div = Div(Img(src=plot_url, alt="Score Distribution", style="width:100%;"))
-            cards.append(Card(card_title, plot_div, *card_content, cls="rounded-xl"))
+            # Add the completed card with a title and content to the list
+            cards.append(Card(card_title, *card_content, cls="rounded-xl"))
 
-        grid = Div(Grid(*cards, cols_lg=3, cls="gap-4"), id='search_results')  # Display in a 3-column grid
+        grid = Div(Grid(*cards, cols_max=4, cls="gap-4"), id='search_results')  # Display in a 2-column grid
 
         # Return the grid first, then the clear_search_bar to ensure the results stay visible
         return grid, clear_search_bar, search_modal()
