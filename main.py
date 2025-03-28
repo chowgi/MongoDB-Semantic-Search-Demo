@@ -257,10 +257,20 @@ def get(query: str, alpha: int):
             card_content = []
             for node in nodes:
 
+                # Get plot text and create truncated version
+                plot_text = node.metadata.get('text', '')
+                truncated_text = plot_text[:100] + '...' if len(plot_text) > 100 else plot_text
+                
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
+                    P(Span("Plot: ", cls="text-primary"),
+                      Div(truncated_text, 
+                          cls="truncated-text cursor-pointer",
+                          hx_get=f"/expand-text?text={plot_text}",
+                          hx_target="closest div",
+                          hx_swap="outerHTML")),
                     )
                 card_content.append(node_content)
 
@@ -273,6 +283,22 @@ def get(query: str, alpha: int):
         return grid, clear_search_bar, search_modal()
     else:
         return P("Please enter a search query.")
+
+@rt("/expand-text")
+def get(text: str):
+    return Div(text, 
+               cls="expanded-text cursor-pointer",
+               hx_get=f"/collapse-text?text={text[:100]}",
+               hx_target="closest div",
+               hx_swap="outerHTML")
+
+@rt("/collapse-text")
+def get(text: str):
+    return Div(f"{text}...", 
+               cls="truncated-text cursor-pointer",
+               hx_get=f"/expand-text?text={text}",
+               hx_target="closest div",
+               hx_swap="outerHTML")
 
 @rt("/suggest")
 def post(query: str):
