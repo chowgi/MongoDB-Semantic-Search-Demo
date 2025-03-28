@@ -255,19 +255,20 @@ def get(query: str, alpha: int):
 
             card_title = H4(f'{mode_name}')
             card_content = []
-            for node in nodes:
+            for node in nodes[:3]:
 
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
+                    P(Span("Plot: ", cls="text-primary"), f"{node.text[:200]}"),
                     )
                 card_content.append(node_content)
 
             # Add the completed card with a title and content to the list
             cards.append(Card(card_title, *card_content, cls="rounded-xl"))
 
-        grid = Div(Grid(*cards, cols_lg=3, cls="gap-4"), id='search_results')  # Display in a 3-column grid
+        grid = Div(Grid(*cards, cols_max=4, cls="gap-4"), id='search_results')  # Display in a 2-column grid
 
         # Return the grid first, then the clear_search_bar to ensure the results stay visible
         return grid, clear_search_bar, search_modal()
