@@ -261,7 +261,7 @@ def get(query: str, alpha: int):
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
-                    P(Span("Plot: ", cls="text-primary"), f"{node.text[:200]}"),
+                    P(Span("Plot: ", cls="text-primary"), f"{node.text.split('Plot:')[-1][:200] if 'Plot:' in node.text else node.text[:200]}"),
                     )
                 card_content.append(node_content)
 
