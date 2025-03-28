@@ -199,6 +199,20 @@ def search(query, alpha):
 
     return results  
 
+def search_modal():
+    return DivCentered(
+        Button("Show me whats going on", data_uk_toggle="target: #my-modal"),
+        Modal(
+            ModalTitle("Search Demo Diagram"),
+            Img(src="/search_diagram.png",
+                alt="Search Demo Diagram",
+                style="width:100%; height:auto; display:block; margin:auto;"),
+            footer=ModalCloseButton("Close", cls=ButtonT.primary),
+            id='my-modal'
+        ),
+        cls="mt-5"
+    )
+
 @rt("/search")
 def get():
     """Main search page that displays the search form and empty results container"""
@@ -256,7 +270,7 @@ def get(query: str, alpha: int):
         grid = Div(Grid(*cards, cols_lg=3, cls="gap-4"), id='search_results')  # Display in a 3-column grid
 
         # Return the grid first, then the clear_search_bar to ensure the results stay visible
-        return grid, clear_search_bar
+        return grid, clear_search_bar, search_modal()
     else:
         return P("Please enter a search query.")
 
