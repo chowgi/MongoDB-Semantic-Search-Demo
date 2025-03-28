@@ -257,11 +257,19 @@ def get(query: str, alpha: int):
             card_content = []
             for node in nodes[:3]:
 
+                # Extract full and truncated plot text
+                full_plot = node.text.split('Plot:')[-1] if 'Plot:' in node.text else node.text
+                truncated_plot = full_plot[:250] + "..." if len(full_plot) > 250 else full_plot
+                
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
-                    P(Span("Plot: ", cls="text-primary"), f"{node.text.split('Plot:')[-1][:250] if 'Plot:' in node.text else node.text[:250]}"),
+                    P(Span("Plot: ", cls="text-primary"),
+                      Span(truncated_plot,
+                           onclick=f"this.textContent = `{full_plot}`",
+                           cls="cursor-pointer hover:text-blue-500",
+                           title="Click to expand")),
                     )
                 card_content.append(node_content)
 
