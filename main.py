@@ -19,7 +19,8 @@ app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title
 # Retrieve environment variables for necessary API keys and URIs
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
-db_name = "mongo_voyage_demos"
+db_name = "semantic_search_demos"
+collection_name ='movie_embeddings'
 
 # Set the default VoyageAI Embedding and re-ranker
 Settings.embed_model = VoyageEmbedding(
@@ -38,7 +39,7 @@ mongodb_client = pymongo.MongoClient(mongodb_uri)
 search_store = MongoDBAtlasVectorSearch(
     mongodb_client, 
     db_name=db_name, 
-    collection_name='movie_embeddings',
+    collection_name=collection_name,
     embedding_key="embedding",
     text_key="text",
     fulltext_index_name="text_index",
