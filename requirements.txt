@@ -1,9 +1,0 @@
-llama-index-core
-llama-index-embeddings-voyageai
-llama-index-vector-stores-mongodb
-llama-index-postprocessor-voyageai-rerank
-pymongo
-python-fasthtml
-MonsterUI
-bson
-pymongo
