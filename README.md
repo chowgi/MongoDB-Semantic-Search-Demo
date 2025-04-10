@@ -1,32 +1,62 @@
-# MongoDB + Voyage AI Demo
 
-This project demonstrates MongoDB + Voyage AI integration with two standalone FastHTML applications:
+# MongoDB Semantic Search Demo
 
-1. **Search Application** - Compare Text, Vector, and Hybrid Search Methods
-2. **RAG Application** - Retrieval Augmented Generation chat interface
-3. **Agent Demo** - Coming Soon
+A FastHTML web application demonstrating advanced semantic search capabilities using MongoDB Atlas Vector Search and Voyage AI.
 
-## Environment Variables Required
+## Features
 
-Set the following environment variables before running the applications:
+- **Multi-Modal Search Comparison:**
+  - Text-based search
+  - Vector-based search
+  - Hybrid search (combining text and vector)
+  - Re-ranked vector search results
 
-- `OPENAI_API_KEY` - OpenAI API key
+- **Interactive UI:**
+  - Real-time search results
+  - Search suggestions
+  - Adjustable text/vector bias
+  - Expandable movie plot descriptions
+
+## Requirements
+
+The following environment variables must be set in your Replit Secrets:
+
 - `MONGODB_URI` - MongoDB Atlas connection string
 - `VOYAGE_API_KEY` - Voyage AI API key
 
-## Running the Applications
+## Technical Stack
 
-### Search Application
+- **Backend Framework:** FastHTML
+- **Database:** MongoDB Atlas with Vector Search
+- **Embeddings:** Voyage AI (voyage-3 model)
+- **Re-ranking:** Voyage AI (rerank-2 model)
+- **UI Components:** MonsterUI
 
-Run the search application
+## Running the Application
 
-```bash
-python main.py
+1. Ensure all environment variables are set in Replit Secrets
+2. Click the "Run" button in your Replit workspace
+3. The application will start on port 5001
+
+## Project Structure
+
+```
+├── public/               # Static assets
+├── main.py              # Main application code
+└── requirements.txt     # Python dependencies
 ```
 
-## Tools and Libraries Used
+## Search Features
 
-- FastHTML - Server and UI framework
-- MongoDB Atlas - Database and vector storage
-- Voyage AI - Embeddings generation
-- OpenAI - Language model integration
+- **Text Search:** Traditional text-based search using MongoDB Atlas
+- **Vector Search:** Semantic search using Voyage AI embeddings
+- **Hybrid Search:** Combines text and vector search with adjustable weights
+- **Re-ranked Search:** Enhanced vector search results using Voyage AI re-ranking
+
+## Movie Dataset
+
+The application searches through a movie database containing:
+- Movie titles
+- Ratings
+- Plot descriptions
+- Vector embeddings for semantic search
