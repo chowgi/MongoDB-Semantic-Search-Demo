@@ -18,7 +18,7 @@ app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title
 # Retrieve environment variables for necessary API keys and URIs
 mongodb_uri = os.environ['MONGODB_URI']
 voyage_api_key = os.environ['VOYAGE_API_KEY']
-db_name = "semantic_search_demos"
+db_name = "semantic_search_demo"
 collection_name ='movie_embeddings'
 
 # Set the default VoyageAI Embedding and re-ranker
