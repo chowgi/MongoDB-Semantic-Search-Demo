@@ -24,6 +24,30 @@ The following environment variables must be set in your Replit Secrets:
 - `MONGODB_URI` - MongoDB Atlas connection string
 - `VOYAGE_API_KEY` - Voyage AI API key
 
+## Database Setup
+
+1. **MongoDB Atlas Setup:**
+   - Create a MongoDB Atlas account and cluster
+   - In your cluster, create a database named `semantic_search_demo`
+   - Create a collection named `movie_embeddings`
+
+2. **Environment Configuration:**
+   - Open the Secrets tab in your Replit workspace
+   - Add your MongoDB Atlas connection string as `MONGODB_URI`
+   - Add your Voyage AI API key as `VOYAGE_API_KEY`
+
+3. **Data Loading:**
+   - Run `load_data.py` to populate the database with movie data
+   - This script will:
+     - Load movie data from `movie_embeddings.json`
+     - Create necessary search indexes for text and vector search
+     - Skip existing documents to avoid duplicates
+
+4. **Index Setup:**
+   The script automatically creates two indexes:
+   - A text search index for traditional text queries
+   - A vector search index for semantic search with 1024-dimensional embeddings
+
 ## Technical Stack
 
 - **Backend Framework:** FastHTML
