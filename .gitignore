@@ -9,6 +9,7 @@
 !load_data.py
 !movie_embeddings.json
 !.replit
+!pyproject.toml
 
 # And not this directory and its contents
 !public/
