@@ -3,7 +3,6 @@ from llama_index.vector_stores.mongodb import MongoDBAtlasVectorSearch
 from llama_index.core import VectorStoreIndex, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from llama_index.postprocessor.voyageai_rerank import VoyageAIRerank
-from llama_index.core import VectorStoreIndex
 from monsterui.all import *
 import pymongo
 import os
