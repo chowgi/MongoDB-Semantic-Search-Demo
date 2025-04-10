@@ -9,6 +9,7 @@
 !requirements.txt
 !load_data.py
 !movie_embeddings.json
+!.replit
 
 # And not this directory and its contents
 !public/
