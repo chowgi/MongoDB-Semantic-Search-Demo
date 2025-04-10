@@ -3,6 +3,11 @@
 
 A FastHTML web application demonstrating advanced semantic search capabilities using MongoDB Atlas Vector Search and Voyage AI.
 
+## Try it Live!
+
+You can "remix" the app directly on Replit here:
+[https://replit.com/@BenKarciauskas/MongoDB-Semantic-Search-Demo#README.md]
+
 ## Features
 
 - **Multi-Modal Search Comparison:**
