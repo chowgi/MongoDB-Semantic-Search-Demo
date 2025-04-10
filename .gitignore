@@ -6,7 +6,6 @@
 !.gitignore
 !main.py
 !README.md
-!requirements.txt
 !load_data.py
 !movie_embeddings.json
 !.replit
