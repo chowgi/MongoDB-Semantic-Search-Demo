@@ -7,6 +7,8 @@
 !main.py
 !README.md
 !requirements.txt
+!load_data.py
+!movie_embeddings.json
 
 # And not this directory and its contents
 !public/
