@@ -7,4 +7,3 @@ python-fasthtml
 MonsterUI
 bson
 pymongo
-gpt-index
