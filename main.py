@@ -31,6 +31,9 @@ voyageai_rerank = VoyageAIRerank(
     api_key=voyage_api_key, top_k=5, model="rerank-2", truncation=True
 )
 
+# Disable LLM
+Settings.llm = None
+
 # Establish MongoDB client connection using the provided URI
 mongodb_client = pymongo.MongoClient(mongodb_uri)
 

@@ -6,7 +6,7 @@ A FastHTML web application demonstrating advanced semantic search capabilities u
 ## Try it Live!
 
 You can "remix" the app directly on Replit here:
-[https://replit.com/@BenKarciauskas/MongoDB-Semantic-Search-Demo#README.md]
+[https://replit.com/@BenKarciauskas/MongoDB-Semantic-Search-Demo?v=1]
 
 ## Features
 
@@ -64,8 +64,8 @@ The following environment variables must be set in your Replit Secrets:
 ## Running the Application
 
 1. Ensure all environment variables are set in Replit Secrets
-2. Click the "Run" button in your Replit workspace
-3. The application will start on port 5001
+3. Click the "Run" button in your Replit workspace
+4. The application will start on port 5001
 
 ## Project Structure
 
