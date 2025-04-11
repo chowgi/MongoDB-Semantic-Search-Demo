@@ -22,13 +22,6 @@ You can "remix" the app directly on Replit here:
   - Adjustable text/vector bias
   - Expandable movie plot descriptions
 
-## Requirements
-
-The following environment variables must be set in your Replit Secrets:
-
-- `MONGODB_URI` - MongoDB Atlas connection string
-- `VOYAGE_API_KEY` - Voyage AI API key
-
 ## Setup
 
 1. **MongoDB Atlas Setup:**
@@ -68,13 +61,6 @@ The following environment variables must be set in your Replit Secrets:
 3. Click the "Run" button in your Replit workspace
 4. The application will start on port 5001
 
-## Project Structure
-
-```
-├── public/               # Static assets
-├── main.py              # Main application code
-└── requirements.txt     # Python dependencies
-```
 
 ## Search Features
 
