@@ -24,4 +24,4 @@ author = 14050015
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "pip install -r requirements.txt && python3 main.py"
+args = "python3 main.py"

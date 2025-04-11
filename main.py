@@ -4,6 +4,7 @@ from llama_index.core import VectorStoreIndex, Settings
 from llama_index.embeddings.voyageai import VoyageEmbedding
 from llama_index.postprocessor.voyageai_rerank import VoyageAIRerank
 from monsterui.all import *
+from dotenv import load_dotenv
 import pymongo
 import os
 
@@ -14,6 +15,9 @@ import os
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
 app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title="MongoDB Semantic Search Demo")
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Retrieve environment variables for necessary API keys and URIs
 mongodb_uri = os.environ['MONGODB_URI']

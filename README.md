@@ -29,7 +29,7 @@ The following environment variables must be set in your Replit Secrets:
 - `MONGODB_URI` - MongoDB Atlas connection string
 - `VOYAGE_API_KEY` - Voyage AI API key
 
-## Database Setup
+## Setup
 
 1. **MongoDB Atlas Setup:**
    - Create a MongoDB Atlas account and cluster
@@ -37,9 +37,10 @@ The following environment variables must be set in your Replit Secrets:
    - Create a collection named `movie_embeddings`
 
 2. **Environment Configuration:**
-   - Open the Secrets tab in your Replit workspace
+   - Open the .env file
    - Add your MongoDB Atlas connection string as `MONGODB_URI`
    - Add your Voyage AI API key as `VOYAGE_API_KEY`
+   - Open a shell and run "pip install -r requirements.txt"
 
 3. **Data Loading:**
    - Run `load_data.py` to populate the database with movie data
