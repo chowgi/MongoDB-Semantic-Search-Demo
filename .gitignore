@@ -10,7 +10,6 @@
 !movie_embeddings.json
 !.replit
 !requirements.txt
-!.env
 
 # And not this directory and its contents
 !public/
