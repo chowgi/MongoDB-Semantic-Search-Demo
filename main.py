@@ -130,6 +130,9 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
+
+
+
 def search(query, alpha):
     modes = ["text_search", "default", "hybrid"]  # default is vector
     results = {}  # Initialize results as an empty dictionary
