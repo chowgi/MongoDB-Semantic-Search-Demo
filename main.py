@@ -60,13 +60,31 @@ search_index = VectorStoreIndex.from_vector_store(search_store)
 ##################################################
 
 def navbar():
-    return NavBar(brand=A(
-                      DivLAligned(
-                      Img(src='MongoDB.svg', height=25,width=25),
-                      H4('MongoDB Semantic Search Demo')
-                    ), href="/"
-                 )
-            )
+    alpha_form = Form(
+        DivHStacked(
+            P("Text/Vector Bias:", cls="text-sm font-medium"),
+            Range(value='5', min='1', max='10', name='alpha', id='alpha', cls="w-32"),
+            Button("Update Results", 
+                   cls=ButtonT.primary + " ml-2",
+                   type="submit"),
+            cls="flex items-center"
+        ),
+        hx_get="/search/results",
+        hx_target="#search_results",
+        hx_include="#search-input",
+        cls="ml-auto"
+    )
+    
+    return NavBar(
+        brand=A(
+            DivLAligned(
+                Img(src='MongoDB.svg', height=25,width=25),
+                H4('MongoDB Semantic Search Demo')
+            ),
+            href="/"
+        ),
+        right=alpha_form
+    )
 
 # Build the search bar
 def search_bar():
@@ -110,11 +128,9 @@ def search_bar():
 
     search_form = Form(
         Grid(
-            Div(search_input, cls="col-span-7"),
-            Div(search_button, cls="col-span-1"),
-            Div(P("Text/Vector Bias:", cls="col-span-2")),
-            Div(alpha_range, cls="col-span-2"),
-            cols=8,
+            Div(search_input, cls="col-span-10"),
+            Div(search_button, cls="col-span-2"),
+            cols=12,
             cls="items-center gap-2"
         ),
         hx_get="/search/results",
