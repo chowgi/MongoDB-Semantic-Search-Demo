@@ -213,7 +213,10 @@ def get(query: str, alpha: int):
 
     if query:
         results = search(query, alpha=alpha/10)
-
+        
+        # Add search query header
+        search_header = H3(f"Search results for: {query}", cls="mb-4 text-xl font-bold")
+        
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
         for mode_name, nodes in results.items(): 
@@ -241,10 +244,14 @@ def get(query: str, alpha: int):
             # Add the completed card with a title and content to the list
             cards.append(Card(card_title, *card_content, cls="rounded-xl"))
 
-        grid = Div(Grid(*cards, cols_max=4, cls="gap-4"), id='search_results')  # Display in a 2-column grid
+        results_container = Div(
+            search_header,
+            Grid(*cards, cols_max=4, cls="gap-4"),
+            id='search_results'
+        )
 
-        # Return the grid first, then the clear_search_bar to ensure the results stay visible
-        return grid, clear_search_bar, search_modal()
+        # Return the results container, then the clear_search_bar to ensure the results stay visible
+        return results_container, clear_search_bar, search_modal()
     else:
         return P("Please enter a search query.")
 
