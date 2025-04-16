@@ -106,20 +106,36 @@ def search_bar():
                           cls=ButtonT.primary,
                           type="submit")
 
-    alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
-
     search_form = Form(
         Grid(
-            Div(search_input, cls="col-span-7"),
+            Div(search_input, cls="col-span-11"),
             Div(search_button, cls="col-span-1"),
-            Div(P("Text/Vector Bias:", cls="col-span-2")),
-            Div(alpha_range, cls="col-span-2"),
-            cols=8,
+            cols=12,
             cls="items-center gap-2"
         ),
         hx_get="/search/results",
         hx_target="#search-results",
         hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
+        hx_indicator="#loading"
+    )
+
+    alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
+    update_button = Button("Update Results", 
+                          cls=ButtonT.secondary,
+                          type="submit")
+
+    alpha_form = Form(
+        Grid(
+            Div(P("Text/Vector Bias:", cls="text-sm"), cls="col-span-2"),
+            Div(alpha_range, cls="col-span-8"),
+            Div(update_button, cls="col-span-2"),
+            cols=12,
+            cls="items-center gap-2 mt-4"
+        ),
+        hx_get="/search/results",
+        hx_target="#search-results",
+        hx_trigger="submit",
+        hx_include="#search-input",
         hx_indicator="#loading"
     )
     search_input = Card(
@@ -128,7 +144,12 @@ def search_bar():
         cls="rounded-xl"
     )
 
-    return Div(search_input, cls='pt-5')
+    return Div(Card(
+        suggestion_container,
+        search_form,
+        alpha_form,
+        cls="rounded-xl"
+    ), cls='pt-5')
 
 def search(query, alpha):
     modes = ["text_search", "default", "hybrid"]  # default is vector
