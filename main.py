@@ -92,28 +92,23 @@ def search_bar():
 
     # Create suggestion container
     suggestion_container = Div(
-        P("Try these searches:", cls="font-bold mb-2"),
-        DivHStacked(*suggestion_buttons, cls="flex-wrap"),
+        DivHStacked(P("Try these searches:", cls="font-bold mb-2"), *suggestion_buttons, cls="flex-wrap"),
         cls="mb-4"
     )
 
     search_input = Input(type="search",
                          name="query",
-                         placeholder="Search documents...",
+                         placeholder="Search for the type of movies you like...",
                          cls="search-bar",
                          id="search-input")
     search_button = Button("Search", 
                           cls=ButtonT.primary,
                           type="submit")
 
-    alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
-
     search_form = Form(
         Grid(
             Div(search_input, cls="col-span-7"),
             Div(search_button, cls="col-span-1"),
-            Div(P("Text/Vector Bias:", cls="col-span-2")),
-            Div(alpha_range, cls="col-span-2"),
             cols=8,
             cls="items-center gap-2"
         ),
@@ -130,7 +125,38 @@ def search_bar():
 
     return Div(search_input, cls='pt-5')
 
+# Build the bias update form search bar
+def update_bias(query):
 
+    
+    hidden_input = Input(type="hidden", name="query", value=query)
+
+    update_button = Button("Update", 
+                          cls=ButtonT.primary,
+                          type="submit")
+
+    alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
+
+    search_form = Form(
+        Grid(
+            Div(P("Fine-tune the blend between Text (1) and Vector (10) results for optimal hybrid search results- "), cls="col-span-4"),
+            Div(alpha_range, cls="col-span-3"),
+            Div(update_button, cls="col-span-1 pl-3"),          
+            cols=8,
+            cls="items-center gap-2"
+        ),
+        hidden_input,
+        hx_get="/search/results",
+        hx_target="#search-results",
+        hx_trigger="submit, keyup[key=='Enter'] from:input[name='query']",
+        hx_indicator="#loading",
+    )
+    search_input = Card(
+        search_form,
+        cls="rounded-xl mb-3"
+    )
+
+    return Div(search_input, cls='pt-5')
 
 
 def search(query, alpha):
@@ -197,7 +223,7 @@ def get():
                 Loading(cls=LoadingT.dots), 
                 cls="flex items-center justify-center"),
             id="loading", 
-            cls="htmx-indicator flex items-center justify-center h-12"
+            cls="htmx-indicator flex items-center justify-center"
         ),
         Div(id="search-results", cls="m-2"),
         cls=ContainerT.lg
@@ -205,7 +231,7 @@ def get():
 
 
 @rt("/search/results")
-def get(query: str, alpha: int):
+def get(query: str, alpha: int = 5):
 
     clear_search_bar = Input(type="search",
          name="query",
@@ -234,7 +260,7 @@ def get(query: str, alpha: int):
                 
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
-                    P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
+                    #P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
                     P(Span("Score: ", cls="text-primary"), f"{node.score:.3f}"),
                     P(Span("Plot: ", cls="text-primary"),
                       Span(truncated_plot,
@@ -249,6 +275,7 @@ def get(query: str, alpha: int):
 
         results_container = Div(
             search_header,
+            update_bias(query),
             Grid(*cards, cols_max=4, cls="gap-4"),
             id='search_results'
         )
