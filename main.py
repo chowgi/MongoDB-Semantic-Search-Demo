@@ -70,7 +70,7 @@ def navbar():
 
 # Build the search bar
 def search_bar():
-
+    
     # Create search suggestion buttons
     suggestions = [
         "Action movies about humans fighting robots",
@@ -107,27 +107,13 @@ def search_bar():
                           type="submit")
 
     alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
-    update_button = Button("Update Bias", cls=ButtonT.primary, type="submit") # Added update button
-
-    alpha_form = Form(
-        Grid(
-            Div(P("Text/Vector Bias:", cls="text-sm"), cls="col-span-2"),
-            Div(alpha_range, cls="col-span-8"),
-            Div(update_button, cls="col-span-2"),
-            cols=12,
-            cls="items-center gap-2 mt-4"
-        ),
-        hx_get="/update_bias",
-        hx_target="#search-results",
-        hx_trigger="change, submit",
-        hx_include="#search-input",
-        hx_indicator="#loading"
-    )
 
     search_form = Form(
         Grid(
             Div(search_input, cls="col-span-7"),
             Div(search_button, cls="col-span-1"),
+            Div(P("Text/Vector Bias:", cls="col-span-2")),
+            Div(alpha_range, cls="col-span-2"),
             cols=8,
             cls="items-center gap-2"
         ),
@@ -139,7 +125,6 @@ def search_bar():
     search_input = Card(
         suggestion_container,
         search_form,
-        alpha_form, # Added alpha form
         cls="rounded-xl"
     )
 
@@ -231,10 +216,10 @@ def get(query: str, alpha: int):
 
     if query:
         results = search(query, alpha=alpha/10)
-
+        
         # Add search query header
         search_header = H3(f"Search results for: ", Span(query, cls="text-primary"), cls="mb-4 text-xl font-bold")
-
+        
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
         for mode_name, nodes in results.items(): 
@@ -246,7 +231,7 @@ def get(query: str, alpha: int):
                 # Extract full and truncated plot text
                 full_plot = node.text.split('Plot:')[-1] if 'Plot:' in node.text else node.text
                 truncated_plot = full_plot[:250] + "..." if len(full_plot) > 250 else full_plot
-
+                
                 node_content = Div(
                     P(Span("Title: ", cls="text-primary"), node.metadata['title']),
                     P(Span("Rating: ", cls="text-primary"), node.metadata['rating']),
@@ -282,10 +267,6 @@ def post(query: str):
          cls="search-bar",
          id="search-input",
         hx_swap_oob="true")
-
-@rt("/update_bias") #New route for bias update
-def get(alpha: int):
-    return get(query=request.args.get("query"), alpha=alpha) # reuse existing search function
 
 # Start the App
 serve()
