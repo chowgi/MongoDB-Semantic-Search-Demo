@@ -215,7 +215,7 @@ def get(query: str, alpha: int):
         results = search(query, alpha=alpha/10)
         
         # Add search query header
-        search_header = H3(f"Search results for: {query}", cls="mb-4 text-xl font-bold")
+        search_header = H3(f"Search results for: ", Span(query, cls="text-primary"), cls="mb-4 text-xl font-bold")
         
         # Create a card for each mode with the mode_name as the title
         cards = []  # Initialize the cards list
