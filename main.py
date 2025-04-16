@@ -186,7 +186,7 @@ def get():
     return Title("Search - MongoDB + Voyage AI"), Container(
         navbar(),
         Div(H2("Movie Search", cls="pb-10 text-center"),
-            P("Compare Text, Vector, Hybrid and Re-ranked Search Methods", cls="pb-5 text-center uk-text-lead"),
+            P("Explore and compare Text, Vector, Hybrid, and Re-ranked Search using Atlas Search with Voyage embeddings and rerankers", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
             cls="container mx-auto p-4"),
         Div(
