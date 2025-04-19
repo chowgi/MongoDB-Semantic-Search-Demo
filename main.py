@@ -60,7 +60,9 @@ search_index = VectorStoreIndex.from_vector_store(search_store)
 ##################################################
 
 def navbar():
-    return NavBar(brand=A(
+    return NavBar(
+                #A("How does this work?",href='/explain'),
+                brand=A(
                       DivLAligned(
                       Img(src='MongoDB.svg', height=25,width=25),
                       H4('MongoDB Semantic Search Demo')
@@ -83,25 +85,24 @@ def search_bar():
         suggestion_buttons.append(
             Button(suggestion,
                    name="query",
-                   cls="text-sm hover:bg-gray-700 hover:text-white rounded mb-2 mr-2",
-                   hx_target="#search-input",
-                   hx_post=f"/suggest?query={suggestion}",
+                   cls="text-sm hover:bg-green-700 rounded mb-2 mr-2",
+                   onclick=f"document.getElementById('search-input').value = '{suggestion}'",
                    hx_swap="OuterHTML"
                   )
         )
 
     # Create suggestion container
     suggestion_container = Div(
-        DivHStacked(P("Try these searches:", cls="font-bold mb-2"), *suggestion_buttons, cls="flex-wrap"),
+        DivHStacked(P("Try these example searchs:", cls="font-bold mb-2"), *suggestion_buttons, cls="flex-wrap"),
         cls="mb-4"
     )
 
     search_input = Input(type="search",
                          name="query",
-                         placeholder="Search for the type of movies you like...",
+                         placeholder="Describe a movie...",
                          cls="search-bar",
                          id="search-input")
-    search_button = Button("Search", 
+    search_button = Button("Search",
                           cls=ButtonT.primary,
                           type="submit")
 
@@ -128,7 +129,6 @@ def search_bar():
 # Build the bias update form search bar
 def update_bias(query):
 
-    
     hidden_input = Input(type="hidden", name="query", value=query)
 
     update_button = Button("Update", 
@@ -195,7 +195,7 @@ def search(query, alpha):
 
 def search_modal():
     return DivCentered(
-        Button("Show me whats going on", data_uk_toggle="target: #my-modal"),
+        #Button("Show me whats going on", data_uk_toggle="target: #my-modal"),
         Modal(
             ModalTitle("Search Demo Diagram"),
             Img(src="/search_diagram.png",
@@ -209,12 +209,10 @@ def search_modal():
 
 @rt("/")
 def get():
-    """Main search page that displays the search form and empty results container"""
-    search_results = Div(id="search-results", cls="m-2")
 
     return Title("Search - MongoDB + Voyage AI"), Container(
         navbar(),
-        Div(H2("Movie Search", cls="pb-10 text-center"),
+        Div(H2("Movie Search", cls="pb-10 text-center text-primary"),
             P("Explore and compare Text, Vector, Hybrid, and Re-ranked Search using Atlas Search with Voyage embeddings and rerankers", cls="pb-5 text-center uk-text-lead"),
             search_bar(),
             cls="container mx-auto p-4"),
@@ -285,15 +283,16 @@ def get(query: str, alpha: int = 5):
     else:
         return P("Please enter a search query.")
 
-@rt("/suggest")
-def post(query: str):
-    return Input(type="search",
-         name="query",
-         value=query,
-         placeholder="Search documents...",
-         cls="search-bar",
-         id="search-input",
-        hx_swap_oob="true")
+@rt("/explain")
+def get():
+
+    return Title("Search - MongoDB + Voyage AI"), Container(
+        navbar(),
+        Div(H2("Explination", cls="pb-10 text-center"),
+            P("Explore and compare Text, Vector, Hybrid, and Re-ranked Search using Atlas Search with Voyage embeddings and rerankers", cls="pb-5 text-center uk-text-lead"),
+
+        ),cls=ContainerT.lg
+    )
 
 # Start the App
 serve()
