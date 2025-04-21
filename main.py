@@ -76,10 +76,7 @@ def search_bar():
             Button(suggestion,
                    name="query",
                    cls="text-sm hover:bg-green-700 rounded mb-2 mr-2",
-                   hx_get="/",
-                   hx_target="#search-input",
-                   hx_trigger="click",
-                   hx_swap="innerHTML"
+                   onclick=f"document.getElementById('search-input').value = '{suggestion}'"
                   )
         )
 
