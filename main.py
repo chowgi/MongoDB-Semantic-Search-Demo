@@ -8,10 +8,6 @@ from dotenv import load_dotenv
 import pymongo
 import os
 
-##################################################
-########## Setting and Configuration #############
-##################################################
-
 # Initialize FastHTML with MonsterUI theme
 hdrs = Theme.green.headers()
 app, rt = fast_app(hdrs=hdrs, static_path="public", live=True, debug=True, title="MongoDB Semantic Search Demo")
@@ -53,11 +49,6 @@ search_store = MongoDBAtlasVectorSearch(
 
 # Generate the vector index from the existing vector store
 search_index = VectorStoreIndex.from_vector_store(search_store)
-
-
-##################################################
-##################  Functions ####################
-##################################################
 
 def navbar():
     return NavBar(
