@@ -66,7 +66,7 @@ def search_bar():
     # Create search suggestion buttons
     suggestions = [
         "Action movies about humans fighting robots",
-        "Sci-fi films with space exploration themes",
+        "Machines taking over the human race",
         "Movies for kids that includes animals"
     ]
 
