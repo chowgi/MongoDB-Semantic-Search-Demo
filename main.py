@@ -52,7 +52,6 @@ search_index = VectorStoreIndex.from_vector_store(search_store)
 
 def navbar():
     return NavBar(
-                #A("How does this work?",href='/explain'),
                 brand=A(
                       DivLAligned(
                       Img(src='MongoDB.svg', height=25,width=25),
@@ -184,19 +183,7 @@ def search(query, alpha):
 
     return results  
 
-def search_modal():
-    return DivCentered(
-        #Button("Show me whats going on", data_uk_toggle="target: #my-modal"),
-        Modal(
-            ModalTitle("Search Demo Diagram"),
-            Img(src="/search_diagram.png",
-                alt="Search Demo Diagram",
-                style="width:100%; height:auto; display:block; margin:auto;"),
-            footer=ModalCloseButton("Close", cls=ButtonT.primary),
-            id='my-modal'
-        ),
-        cls="mt-5"
-    )
+# Removed unused search_modal function since the image is missing and there's no trigger button
 
 @rt("/")
 def get():
@@ -270,20 +257,11 @@ def get(query: str, alpha: int = 5):
         )
 
         # Return the results container, then the clear_search_bar to ensure the results stay visible
-        return results_container, clear_search_bar, search_modal()
+        return results_container, clear_search_bar
     else:
         return P("Please enter a search query.")
 
-@rt("/explain")
-def get():
-
-    return Title("Search - MongoDB + Voyage AI"), Container(
-        navbar(),
-        Div(H2("Explination", cls="pb-10 text-center"),
-            P("Explore and compare Text, Vector, Hybrid, and Re-ranked Search using Atlas Search with Voyage embeddings and rerankers", cls="pb-5 text-center uk-text-lead"),
-
-        ),cls=ContainerT.lg
-    )
+# Removed unused explain route
 
 # Start the App
 serve()
