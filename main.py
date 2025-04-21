@@ -76,8 +76,10 @@ def search_bar():
             Button(suggestion,
                    name="query",
                    cls="text-sm hover:bg-green-700 rounded mb-2 mr-2",
-                   onclick=f"document.getElementById('search-input').value = '{suggestion}'",
-                   hx_swap="OuterHTML"
+                   hx_get="/",
+                   hx_target="#search-input",
+                   hx_trigger="click",
+                   hx_swap="innerHTML"
                   )
         )
 
@@ -183,8 +185,6 @@ def search(query, alpha):
 
     return results  
 
-# Removed unused search_modal function since the image is missing and there's no trigger button
-
 @rt("/")
 def get():
 
@@ -260,8 +260,6 @@ def get(query: str, alpha: int = 5):
         return results_container, clear_search_bar
     else:
         return P("Please enter a search query.")
-
-# Removed unused explain route
 
 # Start the App
 serve()
