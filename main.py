@@ -127,7 +127,7 @@ def search_bar():
     return Div(search_input, cls='pt-5')
 
 # Build the bias update form search bar
-def update_bias(query):
+def update_bias(query, alpha=5):
 
     hidden_input = Input(type="hidden", name="query", value=query)
 
@@ -135,7 +135,7 @@ def update_bias(query):
                           cls=ButtonT.primary,
                           type="submit")
 
-    alpha_range = Range(value='5', min='1', max='10', name='alpha', id='alpha')
+    alpha_range = Range(value=str(alpha), min='1', max='10', name='alpha', id='alpha')
 
     search_form = Form(
         Grid(
@@ -273,7 +273,7 @@ def get(query: str, alpha: int = 5):
 
         results_container = Div(
             search_header,
-            update_bias(query),
+            update_bias(query, alpha),
             Grid(*cards, cols_max=4, cls="gap-4"),
             id='search_results'
         )
